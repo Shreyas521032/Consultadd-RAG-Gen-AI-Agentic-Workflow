@@ -2,9 +2,7 @@
 
 A **Retrieval-Augmented Generation (RAG)** AI system built with **Next.js**, designed to automate and streamline review of complex documents like RFPs. It uses **LLMs**, **Pinecone**, and a custom chunking & processing workflow for intelligent summarization, eligibility extraction, and structured report generation.
 
-🚀 **Live Demo**: [https://consultadd-rag-gen-ai-agentic-workflow-rdu4o1apy.vercel.app](https://consultadd-rag-gen-ai-agentic-workflow-rdu4o1apy.vercel.app)
-
-📦 **GitHub Repository**: [github.com/Shreyas521032/Consultadd-RAG-Gen-AI-Agentic-Workflow](https://github.com/Shreyas521032/Consultadd-RAG-Gen-AI-Agentic-Workflow)
+🌍 **Live Demo**: [https://consultadd-rag-gen-ai-agentic-workflow-rdu4o1apy.vercel.app](https://consultadd-rag-gen-ai-agentic-workflow-rdu4o1apy.vercel.app)
 
 ---
 
