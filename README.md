@@ -73,7 +73,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 - **Frontend**: Next.js 14, Tailwind CSS, Geist UI
 - **Backend**: Node.js, Vercel Functions
 - **Vector Store**: Pinecone
-- **AI Models**: DeepSeek R1 / OpenAI GPT
+- **AI Models**: DeepSeek R1 / Llama
 - **Chunking**: Custom tokenizer and sentence splitter
 - **Deployment**: Vercel
 
@@ -97,7 +97,7 @@ README.md
 
 ## 🔹 Use Cases
 
-- RFP response automation
+- Resume shortlisting by matching applicant data with job descriptions for eligibility scoring
 - Legal document summarization
 - Proposal matching & analysis
 - Automated document QA
@@ -113,10 +113,6 @@ README.md
 
 ---
 
-## 👨‍💼 Author
-
-**Shreyas Kasture**  
-[LinkedIn](https://linkedin.com/in/shreyaskasture)
 
 ---
 
