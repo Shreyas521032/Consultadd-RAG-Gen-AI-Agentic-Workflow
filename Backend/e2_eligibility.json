@@ -1,0 +1,81 @@
+{
+  "mandatory_eligibility_criteria": {
+    "client_references": "3",
+    "business_entity_certification": "Box A/B/C"
+  },
+  "technical_data_policy": {
+    "description": "Proposals must include technical data marked with specific statements.",
+    "requirement": true
+  },
+  "evaluation restricted data": {
+    "description": "Data should be used or disclosed only for evaluation purposes.",
+    "requirement": true
+  },
+  "experience": "six years of experience in school district information technology audits",
+  "mandatoryEligibilityCriteria": {
+    "responsivenessAndCompletenessOfProposal": true,
+    "understandingABreadthOfRFPRequirements": true,
+    "experienceWithSimilar Sized School District Clients": true,
+    "cost": true,
+    "abilityToProvideRequestedServices": true,
+    "projectApproach": true,
+    "mbeWbeParticipation": true
+  },
+  "Company Name": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "Business Address": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "Name and Title of Contact": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "Phone Number of Contact": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "Contract Length": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "Contract Value": {
+    "Mandatory": true,
+    "Value": "Required"
+  },
+  "No terminations for default in last five years": {
+    "Mandatory": true,
+    "Value": "Must be met"
+  },
+  "contract_approval": {
+    "minimum_days": 60,
+    "description": "The Hazelwood School Board of Education must formally approve the award of any contract(s) or agreement within 60 days of submission."
+  },
+  "13": "yes",
+  "14": "yes",
+  "15": "yes",
+  "7.1": "yes",
+  "7.2": "yes",
+  "7.3": "yes",
+  "Professional Development and Training Assessment": "Yes",
+  "Technical Support and Maintenance Evaluation": "Yes",
+  "Cybersecurity Rediness and Compliance Review": "Yes",
+  "Mandatory_Certifications": {
+    "City_of_St._Louis": true,
+    "St._Louis_Minority_Supplier_DevelopmentCouncil": true,
+    "Missouri_Regional_CertificateCommittee": true,
+    "State_Certifications": true,
+    "National_Minority_Supplier_Development Council": true,
+    "Women_Business_Employee_National Council": true
+  },
+  "must_be_business_entity": true,
+  "complete_box_b": true,
+  "complete_box_c_if_applicable": true,
+  "current_e_verify_documentation": true,
+  "affidavit_of_work作者ization": true,
+  "mandatory_eligibility": {
+    "location": "Missouri"
+  }
+}

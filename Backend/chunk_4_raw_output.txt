@@ -1,0 +1,30 @@
+<think>
+Alright, so the user provided an RFP text from MHMR seeking contractors for temporary staffing services. They want me to extract only the mandatory eligibility criteria. Let's see what the key sections are here.
+
+First, I should look through each point in the RFP to identify requirements that must be met strictly. Mandatory criteria usually include things like experience, registrations, certifications, etc. 
+
+Looking at section 20: Contractors must provide one or a combination of specific temporary staffing positions. That's definitely mandatory because it specifies what services are required.
+
+Section 21 mentions indicating each position they can offer. This is also crucial since it ties directly to the positions listed in Exhibit 1. So, this needs to be included as well.
+
+Moving on to section 22: They need to provide a list of positions with details like hourly rate, billing percentage, and billed hourly rate. That's a clear requirement for their proposals.
+
+Section 26 states that each contractor must have a project manager assigned to MHMR. This is mandatory because it outlines a specific responsibility they must fulfill.
+
+Other sections mention things like payment terms (sections 27-31) but these are more about how payments will be handled rather than being part of the mandatory criteria for eligibility. 
+
+I should make sure not to include any optional or non-essential criteria, focusing only on what's required before awarding a contract.
+
+So putting it all together, I'll extract sections 20, 21, 22, and 26 as they represent the necessary conditions that must be met for a contractor to be considered eligible. 
+
+Now, formatting this into a JSON object with clear key-value pairs without any explanations.
+</think>
+
+```json
+{
+  "must Provide one or more positions": true,
+  "must list assigned project manager contact info": true,
+  "must provide position breakdown with hourly rate, billing percentage, and billed hourly rate": true,
+  "must assign a dedicated Project Manager for MHMR's temporary staffing services"
+}
+```

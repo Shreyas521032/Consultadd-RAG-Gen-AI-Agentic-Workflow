@@ -1,0 +1,71 @@
+<think>
+Alright, so I need to extract only the mandatory eligibility criteria from this RFP text. Let me go through it step by step.
+
+First, I'll read through the entire content carefully to identify sections that mention requirements which candidates must meet. The user specified criteria like experience, registrations, certifications, turnover, location, etc., so I should look for those terms or implied mandatory points.
+
+Looking at section 7.1: It talks about compliance with immigration laws and E-Verify system. So, this includes E-Verify enrollment, Maintain Company page screenshot, and providing proof of enrollment upon request. These are mandatory requirements, so they should be included.
+
+Next, in section 7.3: Invoices must be submitted to MHMR’s Accounts Payable Department or mailed with a specific PO box. There's also mention of discounts but not acceptance of payment terms shorter than 30 days. So the submission method is a key requirement here; thus, it's mandatory.
+
+Section 7.4 mentions obtaining applicable permits from local, state, county, and federal authorities. This is about compliance with regulations, so it's a necessary criterion.
+
+In section 7.6: Historically Under-Utilized Business (HUB) requirements include submitting a proof of HUB certificate or stating intentions to subcontract if not certified. So this is another mandatory point as it affects how they approach the project.
+
+Section 7.7 discusses Minority/Women and/or Disadvantaged Businesses (M/W/DBE), requiring submissions of their certificates, which is an additional requirement for inclusivity but still part of eligibility.
+
+Section 8 talks about insurance requirements: workers' compensation, employer liability, comprehensive commercial general liability, automobile liability, and contractual liability. All these must be maintained throughout the contract period as per MHMR's policies.
+
+Additionally, section 8.1 specifically mentions that the awarded company must submit a certificate of insurance to the Purchasing Director at a specific address. This is another mandatory point regarding documentation.
+
+I need to make sure I'm only including strict compliance items—so each of these points (E-Verify, payment methods, permits, HUB/M/W/DBE certifications, and insurance details) are clear requirements that must be met without exception.
+
+Now, considering the output format: a valid JSON with clear key-value pairs. So for each criterion, I'll create an object where the key is the requirement name (like E-Verify Enrollment), and the value is the specifics of the requirement as stated in the text.
+
+I should avoid any explanations or surrounding text, just the key-value pairs.
+</think>
+
+```json
+{
+  "E-Verify Enrollment": {
+    "Provider agrees to enroll and use E-Verify in addition to I-9",
+    "will provide Local Authority with a copy of their Maintain Company page from E-Verify to prove enrollment upon execution of this Agreement or soon thereafter",
+    "upon request, an electronic or hard copy screenshot of either the confirmation screen or the tentative non-confirmation screen containing the E-Verify case verification number for attachment to the Form I-9 for the three most recent hires as proof that this provision is being followed"
+  },
+  "Invoice Submission Method": {
+    "Submit to MHMR’s Accounts Payable Department at Accounts.Payable@mhmrtc.org",
+    "Or mail to P.O. Box 2603, Fort Worth, Texas 76113"
+  },
+  "Obtain Permits": {
+    "It is the sole responsibility of the awarded bidder to obtain all applicable permits as required by local, state, county, and federal authorities."
+  },
+  "HUB Certification Submission": {
+    "Submit proof of HUB state certificate if certified",
+    "If not certified but intend to subcontract services, submit Attachment A",
+    "If do not intend to subcontract services, write 'None' on Attachment A and submit it"
+  },
+  "M/W/DBE Certification Submission": {
+    "Submit proof of M/W/DBE certificate",
+    "If not certified but intend to subcontract services, submit Attachment B",
+    "If do not intend to subcontract services, write 'None' on Attachment B and submit it"
+  },
+  "Insurance Requirements - Workers' Compensation": {
+    "Same limits noted above."
+  },
+  "Insurance Requirements - Employer Liability": {
+    "Same limits noted above."
+  },
+  "Insurance Requirements - Comprehensive Commercial General Liability": {
+    "Same limits noted above."
+  },
+  "Insurance Requirements - Automobile Liability": {
+    "Minimum combined single limit of $500,000."
+  },
+  "Insurance Requirements - Contractual Liability": {
+    "Same limits noted above."
+  },
+  "Proof of Insurance Coverage Submission": {
+    "Submit a certificate of insurance to the Purchasing Director at 3840 Hulen St, Suite 538, Fort Worth, Texas 76107",
+    "Name MHMR, its officers, employees, and elected representatives as an additional insured on all required coverage"
+  }
+}
+```

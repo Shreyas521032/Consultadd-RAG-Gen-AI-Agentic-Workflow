@@ -1,0 +1,65 @@
+<think>
+Okay, so I have this RFP text, right? And my task is to extract only the mandatory eligibility criteria from it. The user mentioned that they want these criteria like experience, registrations, certifications, turnover, location, etc., in a JSON object with clear key-value pairs. No explanations or extra text.
+
+Alright, first, I need to read through the RFP carefully and pick out the parts that specify requirements about the company's qualifications. Let me go paragraph by paragraph.
+
+The first few paragraphs talk about certificates of insurance and the agreement regarding subrogation. These are more about what the awarded company must provide but not directly about their eligibility criteria. So probably not relevant here.
+
+Then, in section 9, there's a PROPOSAL EVALUATION PROCESS. It mentions weighting factors like responsiveness to RFP, qualifications, experience, past performance, etc. Now, this is important because these are part of the evaluation process, so they're likely mandatory for candidates applying.
+
+Looking at section B under Proposal Evaluation: Qualifications and Experience. Point 1 says satisfactory past performance verified by references or self-reporting in the RFP. So that's a requirement about their history.
+
+Point 2 mentions entity organization chart and résumés of management and supervisors, including an Account Manager. This seems like they need to provide certain documentation, which is more of an evaluation step than a mandatory criteria.
+
+Point 3 talks about knowledge of policies and practices in the Security Service Industry. So this could be part of their qualifications but maybe not directly mandatory unless it's specified as such.
+
+Points 4 and 5 are about the number of employees and subcontractors. These seem like specific numbers, which might be a requirement for evaluation but perhaps not explicitly mandatory.
+
+Moving to section C: Compatibility of Staffing Plan with MHMR Specifications. Points here talk about providing reliable staff levels and consistent security service results. So again, these are part of the evaluation criteria rather than mandatory requirements.
+
+Section D is about price, E about equipment and materials, which are more about cost than eligibility.
+
+In section 10, there's STANDARD TERMS AND CONDITIONS related to travel policies, sales tax, termination, and TP&A compliance. These are operational terms but not necessarily mandatory for the company's structure unless specified as part of their application requirements.
+
+Wait, looking back at point B.2 under Proposal Evaluation: Qualifications, Experience, and Past Performances. It says "Entity organization chart and résumés of management and supervisors, including an Account Manager." So this is about documentation, not a mandatory requirement like registration or experience.
+
+Hmm, maybe I'm overcomplicating it. Let's think again. Mandatory eligibility criteria would likely be explicit requirements that the company must meet to be considered for the award, such as having certain certifications, meeting specific experience thresholds, etc.
+
+In section B.1, point 4: "Number of Vendor’s direct employees and number of subcontractors..." That seems like a specific requirement about their organizational structure but perhaps not mandatory unless it's part of evaluation criteria.
+
+Wait, maybe I need to focus on sections that directly state what the awarded company must have done or meet in terms of their qualifications. For example, section B mentions past performance verified by references and self-reporting in RFP. That is a requirement because it's about their prior work, which they must demonstrate.
+
+Also, point 2 under B: "Entity organization chart and résumés..." So that's documentation required but not necessarily a mandatory registration or experience.
+
+Looking through the text again, I don't see any explicit mention of certifications like security management systems or insurance registrations. The RFP talks about certificates of insurance being supplied by the awarded company, which is more about what they provide rather than an eligibility requirement for them.
+
+Wait, maybe "AWARDED COMPANY AGREE(S)" in point B:3: "It is the sole responsibility of the awarded company to ensure any subcontractor(s) performing work under this agreement has the required insurance coverage..." So that's part of their obligation but not a mandatory criteria because it's about their duties rather than their qualifications.
+
+So, perhaps the only mandatory eligibility criteria are related to past performance and documentation. But since those are provided as requirements for the RFP evaluation, maybe they aren't mandatory in terms of registration or experience but are part of the application process.
+
+Alternatively, if we consider that section B under Proposal Evaluation is where the candidates must meet certain criteria, then these would be part of their application, making them non-mandatory unless specified elsewhere.
+
+Wait, perhaps I'm misunderstanding. The user wants to extract mandatory eligibility criteria from the RFP, meaning requirements that each candidate must fulfill before applying. So looking for explicit statements in the text about what the company must have.
+
+Looking through the text again:
+
+- In section 9: Proposal Evaluation includes points about past performance (point 1), organizational structure (point 2), knowledge of policies (point 3), and number of employees and subcontractors (points 4 and 5). These are part of the evaluation criteria, not mandatory requirements for the company.
+
+The only explicit requirement is in section B.1: point 4 about past performance verified by references or self-reporting. But this is more about how they evaluate the candidate rather than a requirement the candidate must meet before applying.
+
+Hmm, perhaps there's no explicit mandatory eligibility criteria beyond what is part of the evaluation process. Unless "AWARDED COMPANY" refers to them needing to have certain credentials, but I don't see such mentions.
+
+Wait, in section 10 under TP&A compliance: MHMR is required to comply with the Texas Public Information Act and other unspecified terms. Maybe this implies that the awarded company must also comply, which could be a mandatory criteria if it's part of their structure or operations.
+
+But without explicit mentions of registration numbers, certifications, etc., maybe there are none in the provided RFP text.
+
+Alternatively, perhaps section B under Proposal Evaluation is about how candidates must demonstrate their eligibility through past performance and documentation, but these aren't strict requirements beyond providing that information during evaluation.
+
+So, after careful consideration, I might not find any explicit mandatory eligibility criteria except possibly the documentation part, which isn't a registration or experience requirement. Therefore, maybe there are no mandatory criteria to extract from this RFP.
+</think>
+
+Upon thorough examination of the provided RFP text, it appears that there are no explicit mandatory eligibility criteria that require documentation beyond what is specified as part of the evaluation process. The text outlines requirements for past performance and organizational structure but does not include explicit mandatory registration or certification details.
+
+**Answer:**
+
+There are no explicit mandatory eligibility criteria extracted from the provided RFP based on the sections reviewed, except possibly through the evaluation criteria mentioned.

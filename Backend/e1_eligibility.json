@@ -1,0 +1,110 @@
+{
+  "mandatory_eligibility": {
+    "position Specifications": "Must provide position specifications and hourly billing rates for each specified position.",
+    "pricing_complete": "Pricing must be complete, including hourly billing rates charged to MHMR.",
+    "state_federal_local_laws": "Comply with all state, federal, and local laws regarding employee treatment and compensation.",
+    "payroll_taxes_benefits": "Prepare payroll checks, make necessary deductions, and pay required taxes, insurance, and benefits.",
+    "background_check": "Conduct a background check on temporary employees; additional checks may be requested.",
+    "workplace_safety": "Ensure no workers bring weapons or substances to work; conduct safety checks.",
+    "timesheet的要求": "Submit weekly timesheets approved by supervisors, attach them to invoices, and send separate invoices for each employee.",
+    "direct_placement": "MHMR requests direct placement on an as-needed basis with specified job descriptions and turnaround times."
+  },
+  "Company Background": {
+    "Principal Place of Business": "",
+    "Length of Existence": "",
+    "Breadth of Experience": [],
+    "Management Structure": [],
+    "Performance Related Litigation": [],
+    "Contracts Terminated Due to Non-Performance": [],
+    "Adverse Actions or Sanctions by Regulatory Authorities": []
+  },
+  "Financial Considerations": {
+    "Financial Stability": true,
+    "W-9 Document": "",
+    "Certificate of Insurance": "",
+    "CPA Letter (Non-Public Companies)": "",
+    "Financial Solvency Statement": ""
+  },
+  "References and Attachments": {
+    "Minimum Three References": []
+  },
+  "Scope": {
+    "Products/Services Compliance": [],
+    "Project Role": [],
+    "Responsibilities": [],
+    "Methodology": [],
+    "Project Management Plan": [],
+    "Training Plan": {
+      "Trainers Available": []
+    }
+  },
+  "irrevocable_offer": "must be an irrevocable offer valid for 120 calendar days after the proposal opening",
+  "submission_deadline": "proposals must be submitted by the stated deadline to be considered",
+  "include_required_documents": "must include copies of any license(s), certification(s), registration(s), permit(s), etc. as required by authorities with jurisdiction",
+  "deviation_form": "must include a signed Deviation Form stating commitment to all terms and conditions",
+  "Mandatory_Eligibility_Criteria": {
+    "Confidentiality_Policy": {
+      "Value": "Page-by-page markings on all information handled by the awarded company."
+    },
+    "Work_Product_Standards_Certification": {
+      "Value": "Certification that all work and materials meet professional standards consistent with or exceeding industry standards."
+    },
+    "Prohibited_Business_Operations_Verification": {
+      "Required_Fields": {
+        "Entity_Names": [
+          "Contractor"
+        ],
+        "Business_Operation_Specifics": [
+          {
+            "Country": "Sudan",
+            "Operation": "Scrutinized business operations"
+          },
+          {
+            "Country": "Iran",
+            "Operation": "Scrutinized business operations"
+          },
+          {
+            "Organization": "Designated foreign terrorist organizations",
+            "Operation": "Scrutinized business operations"
+          }
+        ]
+      },
+      "Value": "Verification that Contractor has not engaged in scrutinized business operations prohibited by Texas Government Code."
+    }
+  },
+  "MHMR": {
+    "requiredSubmissionForm": {
+      "hourlyRateToEmployeeBillingPercentage": true,
+      "billedHourlyRateAdminPositions": true,
+      "employeeName": true,
+      "employeePosition": true,
+      "employeeTelephoneNumber": true,
+      "employeeFaxNumber": true,
+      "employeeEmailAddress": true
+    }
+  },
+  "qualifications": {
+    "HUB/DBE": true,
+    "businessClassification": true
+  },
+  "otherRequirements": {
+    "businessDocumentation": true,
+    "businessSignature": true,
+    "businessDate": true,
+    "businessContactInformation": true
+  },
+  "certified_disadvantaged": {
+    "yes": "Yes",
+    "no": "No",
+    "certifying_agency": "",
+    "certificate_number": "",
+    "expiration_date": ""
+  },
+  "eligibility_certification": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "sole_propertor": true,
+  "informed_status": true,
+  "knowledge_of_collusion": true
+}

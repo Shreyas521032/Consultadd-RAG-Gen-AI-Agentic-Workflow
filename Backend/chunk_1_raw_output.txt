@@ -1,0 +1,54 @@
+<think>
+Okay, so I need to extract the mandatory eligibility criteria from this RFP. Let me start by reading through the text carefully.
+
+First, looking at page 1 and 2, there's information about the Pre-Proposals Conference, but that's more about scheduling attendance rather than requirements.
+
+Starting from page 3, it mentions that MHMR is inviting vendors for temporary staffing services. The RFP number is 25-008, which probably doesn't affect eligibility directly.
+
+On page 4 and beyond, there are sections like INDEX and the contents of the proposal package. But I'm looking specifically for mandatory criteria like experience, registrations, certifications, turnover, location, etc.
+
+I notice that in the description under " RFP 25-008 Temporary Staffing Services Page 1 of 33," it says MHMR is a community center and local government authority with a specific history. This might imply they require a certain level of experience or alignment with their services.
+
+Looking for specific criteria, I see that page 4 mentions sections like Proposal Overview, Timelines, General Instructions, etc., but nothing directly stating mandatory eligibility yet.
+
+Wait, in the initial part of the RFP, under " RFP 25-008 Temporary Staffing Services Page 1," it doesn't list any criteria. The actual requirements are probably in the sections like Proposal Overview or elsewhere.
+
+I might need to look at section 6: Proposal Requirements, but that's not provided here. Since I don't have the full RFP text beyond what was given, maybe only general information is present.
+
+Considering the parts mentioned, MHMR being a local government authority with history suggests they require alignment with their services, possibly implying experience in similar roles.
+
+But without explicit criteria like minimum experience or specific certifications listed, it's hard to extract them. Maybe 'MHMR' implies certain standards of quality and service, but that's more inferential than mandatory.
+
+So perhaps the only mandatory eligibility is the submission requirements for the RFP itself, such as attending a pre-proposal conference if they require it.
+
+But wait, in page 2 under Pre-Proposals Conference, it says "All vendors must attend... to get a clear understanding of the requirements." So this implies that attending is necessary. But does that count as an eligibility criterion?
+
+Alternatively, maybe there's no explicit mandatory criteria listed here beyond what's implied by participating in the RFP process.
+
+I'm not sure if 'mandatory' refers to actual written criteria or just the necessity to meet certain implicit standards. If it's the former, then perhaps there are none explicitly stated; if it's the latter, then attending is mandatory.
+
+But since the user asked for mandatory eligibility criteria and provided text that doesn't list any specific numbers, certifications, etc., maybe the answer is that no explicit mandatory criteria were found in the given RFP content. Alternatively, if required to mention 'mandatory,' perhaps it refers to the fact that each vendor must submit their application, which might have implicit requirements.
+
+Wait, but looking back, page 2 talks about submitting a bid and not waiving rights by not attending. So attending is mandatory if you're going to submit a bid. That's an eligibility criterion: Must attend Pre-Proposal Conference if submitting a proposal.
+
+Also, under page 4, section 1 is Company Overview, which describes MHMR as a community center with specific history—maybe implying they require vendors to have experience in similar roles.
+
+So perhaps the mandatory criteria are:
+
+1. Must submit a proposal (bid) by the deadline.
+2. Must attend the Pre-Proposal Conference if submitting a bid; failure to attend waives the right to assert claims due to undiscovered conditions.
+
+But I'm not sure if these count as 'eligibility' per se, or just process requirements.
+
+Alternatively, if considering registration with MHMR, but that's not mentioned here. So maybe only the submission and attendance are mandatory.
+
+I think in this case, the answer would include mandatory criteria like submitting a proposal by deadline and attending the pre-proposal conference.
+</think>
+
+Based on the provided RFP content, the mandatory eligibility criteria identified are:
+
+1. **Must Submit a Proposal**: Vendors must submit their proposals by the specified deadline to be considered for the Temporary Staffing Services.
+
+2. **Must Attend Pre-Proposal Conference**: All vendors submitting a bid are required to attend the scheduled Pre-Proposals Conference on February 12, 2025, at 10:00 A.M. Failure to attend will waive any right to assert claims due to undiscovered conditions.
+
+These criteria ensure that all submissions are evaluated based on participation in the RFP process and adherence to specified deadlines and requirements.

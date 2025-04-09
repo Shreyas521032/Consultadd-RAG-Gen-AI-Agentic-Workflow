@@ -1,0 +1,25 @@
+<think>
+Okay, so I'm trying to figure out how to extract the mandatory eligibility criteria from this RFP text. Let me start by reading through the provided text carefully.
+
+First, I notice that the text is about an invitation for bids or proposals related to temporary staffing services. The key parts here are going to be the sections that specify what the vendor needs to meet in order to be considered.
+
+Looking at the text, there's a part under "4. PROPOSAL SPECIFICATIONS" which seems relevant. Specifically, section 4.1 talks about the scope of services. It mentions that MHMR is looking for temporary staffing agencies providing employees on an as-needed, non-exclusive basis. The vendors must address each element and requirement in this RFP.
+
+Then, I see that under "4.2 Purpose and Scope of Work," it states that MHMR wants bids based on an hourly rate. That's a key point because it tells the vendor what type of compensation they're looking for.
+
+Next, there's a paragraph about MHMR's right to reject all bids, meaning no exclusivity, and they might not order any work from the selected contractor. This implies that vendors should consider multiple opportunities without assuming exclusive contracts.
+
+Moving further down, under "4.3 Scope of Services," it mentions that MHMR has over 2,000 employees in various roles such as psychiatrists, nurses, social workers, etc., and they need to be committed to respecting people's dignity and basic human rights. This is more about the nature of the work rather than an eligibility criterion.
+
+Another important section is under "4.3 Scope of Services" again, which specifies that MHMR needs vendors who have at least three years of business experience in temporary staffing. That seems like a mandatory requirement because it sets a minimum tenure for potential vendors to ensure stability and reliability.
+
+Looking back through the text, I don't see any other sections that provide specific eligibility criteria beyond what's mentioned in 4.1-4.3. There are no mentions of registrations, certifications, or turnover rates apart from the three-year experience which is already covered.
+
+So, putting it all together, the mandatory criteria would include having a minimum of three years in temporary staffing and being able to provide employees on an as-needed basis with an hourly rate.
+</think>
+
+The mandatory eligibility criteria extracted from the RFP are as follows:
+
+- **Temporary Staffing Experience**: The vendor must have a minimum of three (3) years of experience in providing temporary staffing services.
+
+These criteria ensure that potential vendors meet the necessary qualifications for MHMR's requirements.
