@@ -114,6 +114,12 @@ README.md
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the **MIT License**.
+© 2025 Shreyas Kasture
+
+All rights reserved.
+
+This software and its source code are the intellectual property of the author. Unauthorized copying, distribution, modification, or usage in any form is strictly prohibited without explicit written permission.
+
+For licensing inquiries, please contact: shreyas200410@gmail.com
