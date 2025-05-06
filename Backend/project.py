@@ -41,7 +41,7 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("About")
     st.info(
-        "This app extracts eligibility criteria from RFP documents and evaluates "
+        "This app extracts eligibility criteria from documents and evaluates "
         "if your organization meets those criteria using AI."
     )
 
