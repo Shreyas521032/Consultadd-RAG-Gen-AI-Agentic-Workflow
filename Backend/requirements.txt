@@ -1,4 +1,7 @@
-streamlit 
-PyPDF2 
-pandas 
+streamlit
+PyPDF2
+pandas
 google-generativeai
+python-dotenv
+requests
+numpy
