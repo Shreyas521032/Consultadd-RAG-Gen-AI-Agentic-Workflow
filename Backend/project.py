@@ -161,12 +161,6 @@ with st.sidebar:
     st.markdown("### ⚙️ API Configuration")
     st.markdown("---")
     
-    st.markdown("""
-    🔑 This app uses Gemini's free tier models:
-    - gemini-1.0-flash (default)
-    - gemini-1.0 (fallback)
-    """)
-    
     gemini_api_key = st.text_input("🔑 Gemini API Key", type="password", 
                                   help="Get a free API key from https://aistudio.google.com/app/apikey")
     
@@ -204,10 +198,10 @@ def get_gemini_model():
     """Get the appropriate Gemini model"""
     try:
         # Use Gemini 1.0 Flash (free tier model)
-        return genai.GenerativeModel('gemini-1.0-flash')
+        return genai.GenerativeModel('gemini-1.0-pro')
     except:
         # Fall back to Gemini 1.0 (free tier model)
-        return genai.GenerativeModel('gemini-1.0')
+        return genai.GenerativeModel('gemini-1.5-pro-latest')
 
 # Utility Functions
 def extract_text_from_pdf(uploaded_file):
