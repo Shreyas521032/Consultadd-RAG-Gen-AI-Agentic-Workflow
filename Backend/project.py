@@ -197,10 +197,10 @@ def get_gemini_model():
     """Get the appropriate Gemini model"""
     try:
         # Try to use Gemini 1.5 Pro if available
-        return genai.GenerativeModel('gemini-1.5-pro')
+        return genai.GenerativeModel('gemini-1.0-flash')
     except:
         # Fall back to Gemini 1.0 Pro
-        return genai.GenerativeModel('gemini-1.0-pro')
+        return genai.GenerativeModel('gemini-1.0')
 
 # Utility Functions
 def extract_text_from_pdf(uploaded_file):
