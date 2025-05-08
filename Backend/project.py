@@ -197,7 +197,7 @@ def get_gemini_model():
     """Get the appropriate Gemini model"""
     try:
         # Try to use Gemini 1.5 Pro if available
-        return genai.GenerativeModel('gemini-1.0-flash')
+        return genai.GenerativeModel('gemini-1.0-pro')
     except:
         # Fall back to Gemini 1.0 Pro
         return genai.GenerativeModel('gemini-1.0')
