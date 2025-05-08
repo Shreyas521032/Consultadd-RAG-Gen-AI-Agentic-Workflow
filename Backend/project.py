@@ -161,7 +161,14 @@ with st.sidebar:
     st.markdown("### ⚙️ API Configuration")
     st.markdown("---")
     
-    gemini_api_key = st.text_input("🔑 Gemini API Key", type="password")
+    st.markdown("""
+    🔑 This app uses Gemini's free tier models:
+    - gemini-1.0-flash (default)
+    - gemini-1.0 (fallback)
+    """)
+    
+    gemini_api_key = st.text_input("🔑 Gemini API Key", type="password", 
+                                  help="Get a free API key from https://aistudio.google.com/app/apikey")
     
     if gemini_api_key:
         try:
@@ -196,10 +203,10 @@ CHUNK_SIZE = 5000  # characters per chunk
 def get_gemini_model():
     """Get the appropriate Gemini model"""
     try:
-        # Try to use Gemini 1.5 Pro if available
-        return genai.GenerativeModel('gemini-1.0-pro')
+        # Use Gemini 1.0 Flash (free tier model)
+        return genai.GenerativeModel('gemini-1.0-flash')
     except:
-        # Fall back to Gemini 1.0 Pro
+        # Fall back to Gemini 1.0 (free tier model)
         return genai.GenerativeModel('gemini-1.0')
 
 # Utility Functions
