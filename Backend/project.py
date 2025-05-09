@@ -117,6 +117,19 @@ st.markdown("""
         font-weight: bold;
         text-align: center;
     }
+    /* Footer Styling */
+    .footer {
+        text-align: center;
+        margin-top: 3rem;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        padding-top: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .footer:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
     
     /* Badge styling */
     .badge {
@@ -189,6 +202,8 @@ with st.sidebar:
     - 💼 Focus on improving low-match areas
     - 🔄 Re-run the check after updating your resume
     """)
+    st.markdown("---")
+    st.markdown("Developed By Shreyas Kasture")
 
 # Constants
 CHUNK_SIZE = 5000  # characters per chunk
@@ -711,6 +726,14 @@ REQUIREMENTS ANALYSIS:
                 mime="text/plain"
             ):
                 st.success("✅ Successfully downloaded text report!")
+st.markdown("""
+<div class="footer">
+    <div style="text-align:center;">
+        <h3>🔍 Eligibility Checker</h3>
+        <p style="color:#4e54c8; font-weight:600;">Engineered with ❤️ by Shreyas Kasture for Data Enthusiasts</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     pass 
