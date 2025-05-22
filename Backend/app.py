@@ -14,6 +14,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import numpy as np
+import docx
+from docx import Document
 
 # Streamlit page config
 st.set_page_config(
@@ -168,19 +170,451 @@ st.markdown("""
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         margin: 10px 0;
     }
+    
+    /* Sample documents section */
+    .sample-docs {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .sample-docs h4 {
+        color: white;
+        margin-bottom: 15px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # App title with emojis
-st.title("🚀 Resume Job Match Checker 📝")
+st.title("🚀 Enhanced Resume Job Match Checker 📝")
 
 # App description with emojis
 st.markdown("""
 ### 🔍 Find out if your resume matches the job requirements! 💯
 
-This app extracts job requirements from job descriptions and evaluates 
-whether your resume meets those requirements in seconds! 🎯
+This enhanced app supports **PDF, DOC, DOCX, and TXT** files and evaluates 
+whether your resume meets job requirements with advanced AI analysis! 🎯
+
+**New Features**: Multi-format support | Sample documents | Enhanced analytics
 """)
+
+# Sample Documents Data
+SAMPLE_JOB_DESCRIPTIONS = {
+    "Software Engineer - Tech Startup": """
+Job Title: Senior Software Engineer
+Company: TechFlow Innovations
+
+Job Description:
+We are seeking a passionate Senior Software Engineer to join our dynamic team at TechFlow Innovations. As a key member of our engineering team, you will be responsible for designing, developing, and maintaining scalable web applications and services.
+
+Key Responsibilities:
+• Design and develop high-quality, scalable web applications using modern technologies
+• Collaborate with cross-functional teams including product managers, designers, and other engineers
+• Write clean, maintainable, and well-documented code
+• Participate in code reviews and provide constructive feedback
+• Mentor junior developers and contribute to team knowledge sharing
+• Troubleshoot and debug applications to optimize performance
+• Stay updated with latest technology trends and best practices
+
+Required Qualifications:
+• Bachelor's degree in Computer Science, Software Engineering, or related field
+• 5+ years of professional software development experience
+• Strong proficiency in JavaScript, Python, or Java
+• Experience with modern web frameworks (React, Angular, Vue.js, Django, or Spring)
+• Solid understanding of database design and SQL
+• Experience with cloud platforms (AWS, Azure, or GCP)
+• Knowledge of containerization technologies (Docker, Kubernetes)
+• Experience with version control systems (Git)
+• Strong problem-solving and analytical skills
+• Excellent communication and teamwork abilities
+
+Preferred Qualifications:
+• Master's degree in Computer Science or related field
+• Experience with microservices architecture
+• Knowledge of DevOps practices and CI/CD pipelines
+• Experience with NoSQL databases (MongoDB, Redis)
+• Familiarity with machine learning frameworks
+• Agile/Scrum development experience
+• Open source contributions
+
+What We Offer:
+• Competitive salary and equity package
+• Comprehensive health, dental, and vision insurance
+• Flexible work arrangements and remote work options
+• Professional development opportunities
+• Modern office environment with latest technology
+• Team building events and company retreats
+
+Location: San Francisco, CA (Hybrid)
+Employment Type: Full-time
+Salary Range: $120,000 - $180,000 annually
+""",
+
+    "Data Scientist - Healthcare": """
+Job Title: Senior Data Scientist - Healthcare Analytics
+Company: MedAnalytics Solutions
+
+Job Description:
+MedAnalytics Solutions is looking for an experienced Data Scientist to join our healthcare analytics team. You will work on cutting-edge projects that directly impact patient outcomes and healthcare efficiency.
+
+Key Responsibilities:
+• Develop and implement machine learning models for healthcare predictive analytics
+• Analyze large-scale healthcare datasets to identify patterns and insights
+• Collaborate with clinical teams to understand business requirements
+• Design and execute A/B tests to measure intervention effectiveness
+• Build automated reporting and dashboard solutions
+• Present findings to stakeholders including C-level executives
+• Ensure compliance with healthcare data privacy regulations (HIPAA)
+
+Required Qualifications:
+• PhD or Master's degree in Data Science, Statistics, Computer Science, or related quantitative field
+• 4+ years of experience in data science or analytics roles
+• Strong proficiency in Python and R for data analysis
+• Experience with machine learning libraries (scikit-learn, TensorFlow, PyTorch)
+• Expertise in SQL and database management
+• Experience with statistical analysis and hypothesis testing
+• Knowledge of healthcare data standards (HL7, FHIR)
+• Strong data visualization skills (Tableau, Power BI, or similar)
+• Experience with cloud platforms (AWS, Azure, GCP)
+• Understanding of healthcare regulations and compliance requirements
+
+Preferred Qualifications:
+• Experience in healthcare or life sciences industry
+• Knowledge of clinical workflows and electronic health records (EHR)
+• Experience with big data technologies (Spark, Hadoop)
+• Publications in peer-reviewed journals
+• Experience with natural language processing (NLP)
+• Familiarity with clinical trial design and analysis
+• Knowledge of epidemiology and biostatistics
+
+What We Offer:
+• Competitive salary: $130,000 - $200,000
+• Comprehensive benefits package
+• Opportunity to make a real impact on healthcare outcomes
+• Conference attendance and continuing education support
+• Collaborative research environment
+• Flexible work arrangements
+
+Location: Boston, MA / Remote
+Employment Type: Full-time
+""",
+
+    "Marketing Manager - E-commerce": """
+Job Title: Digital Marketing Manager
+Company: ShopSmart E-commerce
+
+Job Description:
+ShopSmart E-commerce is seeking a dynamic Digital Marketing Manager to drive our online marketing strategy and accelerate business growth. You'll lead multi-channel marketing campaigns and optimize customer acquisition strategies.
+
+Key Responsibilities:
+• Develop and execute comprehensive digital marketing strategies across multiple channels
+• Manage paid advertising campaigns (Google Ads, Facebook, Instagram, TikTok)
+• Optimize conversion funnels and improve customer acquisition costs
+• Lead email marketing campaigns and marketing automation
+• Analyze marketing metrics and ROI to optimize campaign performance
+• Collaborate with content team to create engaging marketing materials
+• Manage marketing budget and allocate resources effectively
+• Stay current with digital marketing trends and emerging platforms
+• A/B test marketing campaigns and landing pages
+• Work with cross-functional teams including sales, product, and customer service
+
+Required Qualifications:
+• Bachelor's degree in Marketing, Business, Communications, or related field
+• 3+ years of digital marketing experience, preferably in e-commerce
+• Proven experience with Google Ads, Facebook Ads Manager, and other paid platforms
+• Strong analytical skills and experience with marketing analytics tools
+• Experience with email marketing platforms (Mailchimp, Klaviyo, SendGrid)
+• Knowledge of SEO/SEM best practices
+• Proficiency in Google Analytics, Google Tag Manager
+• Experience with A/B testing and conversion optimization
+• Strong project management and organizational skills
+• Excellent written and verbal communication skills
+
+Preferred Qualifications:
+• Google Ads and Facebook Blueprint certifications
+• Experience with marketing automation platforms (HubSpot, Marketo)
+• Knowledge of customer segmentation and personalization strategies
+• Experience with influencer marketing and affiliate programs
+• Familiarity with e-commerce platforms (Shopify, WooCommerce, Magento)
+• Basic knowledge of HTML/CSS and web development
+• Experience with customer retention strategies
+• Data visualization skills (Tableau, Power BI)
+
+What We Offer:
+• Salary: $70,000 - $95,000 plus performance bonuses
+• Health, dental, and vision insurance
+• Employee discount on all products
+• Professional development budget
+• Flexible PTO policy
+• Remote work options
+• Modern office with game room and free snacks
+
+Location: Austin, TX / Hybrid
+Employment Type: Full-time
+"""
+}
+
+SAMPLE_RESUMES = {
+    "Software Engineer Resume": """
+JOHN SMITH
+Senior Software Engineer
+Email: john.smith@email.com | Phone: (555) 123-4567
+LinkedIn: linkedin.com/in/johnsmith | GitHub: github.com/johnsmith
+Location: San Francisco, CA
+
+PROFESSIONAL SUMMARY
+Experienced Senior Software Engineer with 6+ years of expertise in full-stack web development, cloud architecture, and team leadership. Proven track record of building scalable applications serving millions of users and mentoring development teams. Passionate about clean code, modern technologies, and delivering high-quality software solutions.
+
+TECHNICAL SKILLS
+Programming Languages: JavaScript, Python, Java, TypeScript, Go
+Frontend: React, Angular, Vue.js, HTML5, CSS3, Redux, Next.js
+Backend: Node.js, Django, Spring Boot, Express.js, FastAPI
+Databases: PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
+Cloud & DevOps: AWS (EC2, S3, Lambda, RDS), Docker, Kubernetes, Jenkins, GitLab CI/CD
+Tools & Technologies: Git, Linux, REST APIs, GraphQL, Microservices, Agile/Scrum
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | TechCorp Solutions | March 2021 - Present
+• Lead development of customer-facing web applications serving 2M+ daily active users
+• Architected and implemented microservices infrastructure reducing system downtime by 40%
+• Mentored team of 4 junior developers, improving code quality and delivery speed by 30%
+• Collaborated with product managers and designers to define technical requirements
+• Implemented automated testing strategies increasing code coverage from 60% to 95%
+• Optimized database queries and caching strategies, improving application performance by 50%
+
+Software Engineer | StartupFlow Inc. | June 2019 - February 2021
+• Developed RESTful APIs and frontend components for B2B SaaS platform
+• Built real-time data processing pipelines using Python and Apache Kafka
+• Integrated third-party payment systems and authentication services
+• Participated in code reviews and contributed to engineering best practices
+• Worked in Agile environment with 2-week sprint cycles
+• Reduced API response times by 35% through code optimization and caching
+
+Junior Software Developer | WebSolutions LLC | August 2018 - May 2019
+• Developed responsive web applications using React and Node.js
+• Worked with senior developers to implement new features and fix bugs
+• Participated in daily standups and sprint planning meetings
+• Contributed to open-source projects and internal tool development
+• Learned modern development practices including TDD and continuous integration
+
+EDUCATION
+Bachelor of Science in Computer Science | University of California, Berkeley | 2018
+Relevant Coursework: Data Structures, Algorithms, Database Systems, Software Engineering
+
+PROJECTS
+E-Commerce Platform (Personal Project)
+• Built full-stack e-commerce application using React, Node.js, and PostgreSQL
+• Implemented user authentication, payment processing, and order management
+• Deployed on AWS with automated CI/CD pipeline using GitHub Actions
+
+Open Source Contributions
+• Contributor to React Router with 3 merged pull requests
+• Maintainer of popular npm package with 10k+ weekly downloads
+• Active participant in local tech meetups and hackathons
+
+CERTIFICATIONS
+• AWS Certified Solutions Architect - Associate (2022)
+• Certified Kubernetes Administrator (CKA) (2021)
+• Google Cloud Professional Cloud Architect (2020)
+
+ACHIEVEMENTS
+• Led team that won "Best Innovation" award at company hackathon
+• Increased application performance by 60% through architectural improvements
+• Reduced deployment time from 2 hours to 15 minutes through automation
+""",
+
+    "Data Scientist Resume": """
+DR. SARAH CHEN
+Senior Data Scientist - Healthcare Analytics
+Email: sarah.chen@email.com | Phone: (555) 987-6543
+LinkedIn: linkedin.com/in/sarahchen | Portfolio: sarahchen-portfolio.com
+Location: Boston, MA
+
+PROFESSIONAL SUMMARY
+Experienced Data Scientist with 5+ years specializing in healthcare analytics and machine learning. PhD in Biostatistics with proven expertise in predictive modeling, clinical data analysis, and regulatory compliance. Published researcher with strong background in statistical analysis and healthcare domain knowledge.
+
+TECHNICAL SKILLS
+Programming: Python, R, SQL, SAS, MATLAB
+Machine Learning: scikit-learn, TensorFlow, PyTorch, XGBoost, Keras
+Data Analysis: pandas, NumPy, SciPy, dplyr, ggplot2
+Visualization: Tableau, Power BI, Matplotlib, Seaborn, Plotly
+Databases: PostgreSQL, MySQL, MongoDB, Snowflake
+Cloud Platforms: AWS (SageMaker, EC2, S3), Azure Machine Learning, GCP
+Healthcare Standards: HL7, FHIR, DICOM, ICD-10, CPT
+Other: Git, Docker, Jupyter, Apache Spark, Hadoop
+
+PROFESSIONAL EXPERIENCE
+
+Senior Data Scientist | HealthTech Analytics | January 2022 - Present
+• Developed predictive models for patient readmission risk, achieving 87% accuracy and reducing readmissions by 15%
+• Built automated reporting dashboards for clinical teams using Tableau and Python
+• Led cross-functional team of 6 members on $2M population health management project
+• Implemented HIPAA-compliant data processing pipelines for 500K+ patient records
+• Collaborated with physicians and nurses to translate clinical needs into data solutions
+• Published 3 peer-reviewed papers on healthcare predictive analytics
+
+Data Scientist | MedResearch Institute | June 2020 - December 2021
+• Analyzed electronic health records (EHR) data for clinical trial optimization
+• Developed natural language processing models for clinical note analysis
+• Created statistical models for drug efficacy studies and FDA submissions
+• Designed and executed A/B tests for digital health interventions
+• Mentored 2 junior data scientists and established best practices for team
+• Reduced data processing time by 50% through automation and optimization
+
+Biostatistician | Clinical Trials Corp | August 2019 - May 2020
+• Performed statistical analysis for Phase II and Phase III clinical trials
+• Designed sample size calculations and randomization schemes
+• Created regulatory-compliant statistical analysis plans (SAPs)
+• Collaborated with biostatistics team on FDA and EMA submissions
+• Developed R packages for internal statistical analysis workflows
+
+Research Assistant | Harvard Medical School | September 2017 - July 2019
+• Conducted biostatistical analysis for epidemiological studies
+• Published research on healthcare disparities and population health
+• Presented findings at American Statistical Association conferences
+• Mentored undergraduate students in statistical methods
+
+EDUCATION
+PhD in Biostatistics | Harvard School of Public Health | 2019
+Dissertation: "Machine Learning Approaches for Precision Medicine in Cardiovascular Disease"
+GPA: 3.9/4.0
+
+Master of Science in Statistics | Stanford University | 2017
+Bachelor of Science in Mathematics | UC Berkeley | 2015, Magna Cum Laude
+
+PUBLICATIONS & RESEARCH
+• "Predictive Modeling for Hospital Readmission Risk" - Journal of Medical Internet Research (2023)
+• "Machine Learning in Clinical Decision Support" - Healthcare Management Review (2022)
+• "Natural Language Processing for Clinical Documentation" - AMIA Conference Proceedings (2021)
+• h-index: 12, Total citations: 450+
+
+CERTIFICATIONS & TRAINING
+• Certified Clinical Data Manager (CCDM) - 2021
+• AWS Certified Machine Learning - Specialty - 2022
+• SAS Certified Clinical Trials Programmer - 2020
+• CITI Program: Human Subjects Research - Current
+
+PROJECTS
+COVID-19 Severity Prediction Model
+• Developed machine learning model predicting COVID-19 severity using lab values and vital signs
+• Achieved 0.85 AUC score and deployed in hospital setting
+• Model used to guide resource allocation and patient triage decisions
+
+Healthcare Fraud Detection System
+• Built ensemble model detecting fraudulent insurance claims with 92% precision
+• Processed 1M+ claims annually saving estimated $5M in fraudulent payments
+• Implemented real-time scoring system with sub-second response times
+
+ACHIEVEMENTS
+• Winner of MIT Healthcare Hackathon 2022
+• Invited speaker at 5+ healthcare analytics conferences
+• Reviewer for Journal of Biomedical Informatics and JAMIA
+• Successfully secured $500K NIH grant for population health research
+""",
+
+    "Marketing Manager Resume": """
+ALEXANDRA RODRIGUEZ
+Digital Marketing Manager
+Email: alex.rodriguez@email.com | Phone: (555) 456-7890
+LinkedIn: linkedin.com/in/alexrodriguez | Portfolio: alexmarketing.com
+Location: Austin, TX
+
+PROFESSIONAL SUMMARY
+Results-driven Digital Marketing Manager with 4+ years of experience in e-commerce marketing, customer acquisition, and conversion optimization. Proven track record of scaling marketing campaigns that generated $5M+ in revenue. Expert in multi-channel digital marketing with strong analytical skills and data-driven approach to growth.
+
+CORE COMPETENCIES
+Digital Advertising: Google Ads, Facebook Ads, Instagram, TikTok, LinkedIn Ads
+Analytics & Tracking: Google Analytics, Google Tag Manager, Facebook Pixel, Hotjar
+Email Marketing: Klaviyo, Mailchimp, SendGrid, HubSpot
+E-commerce Platforms: Shopify, WooCommerce, Magento, BigCommerce
+Marketing Automation: HubSpot, Marketo, Pardot
+SEO/SEM: Keyword research, On-page optimization, Link building, Search Console
+Design Tools: Canva, Adobe Creative Suite, Figma
+A/B Testing: Optimizely, Google Optimize, VWO
+
+PROFESSIONAL EXPERIENCE
+
+Digital Marketing Manager | ShopNow E-commerce | March 2022 - Present
+• Manage $200K monthly advertising budget across Google Ads, Facebook, and TikTok
+• Increased online revenue by 85% year-over-year through optimized marketing campaigns
+• Reduced customer acquisition cost (CAC) from $45 to $28 while maintaining quality
+• Implemented email marketing automation sequences with 32% average open rate
+• Led website conversion optimization project increasing conversion rate from 2.1% to 3.4%
+• Created and managed affiliate marketing program generating 25% of total revenue
+• Collaborated with product team on pricing strategies and promotional campaigns
+
+Marketing Specialist | TrendyStyle Fashion | June 2021 - February 2022
+• Launched successful influencer marketing program resulting in 150% increase in brand awareness
+• Managed social media accounts with combined following of 500K+ across platforms
+• Created content calendar and managed relationships with 50+ micro-influencers
+• Developed customer segmentation strategy improving email click-through rates by 40%
+• Executed seasonal marketing campaigns generating $1.2M in Q4 holiday sales
+• Analyzed customer data to identify high-value segments and personalization opportunities
+
+Digital Marketing Coordinator | LocalBiz Solutions | August 2020 - May 2021
+• Managed Google Ads campaigns for 15+ local business clients
+• Improved average client ROAS from 3.2x to 5.8x through campaign optimization
+• Created landing pages and performed A/B tests to improve conversion rates
+• Developed local SEO strategies increasing organic traffic by 60% for clients
+• Produced weekly performance reports and client presentations
+• Assisted with marketing automation setup and email campaign management
+
+Marketing Assistant | GrowthCorp Agency | January 2020 - July 2020
+• Supported senior marketing team with campaign creation and optimization
+• Conducted competitor analysis and market research for client strategies
+• Managed social media content creation and scheduling
+• Assisted with client onboarding and account management
+• Learned advanced techniques in paid advertising and analytics
+
+EDUCATION
+Bachelor of Business Administration - Marketing | University of Texas at Austin | 2019
+Minor in Digital Media | GPA: 3.7/4.0
+Relevant Coursework: Consumer Behavior, Digital Marketing, Marketing Analytics, Brand Management
+
+CERTIFICATIONS
+• Google Ads Certified (Search, Display, Video, Shopping, Apps) - Current
+• Google Analytics Individual Qualification (IQ) - Current
+• Facebook Blueprint Certified (Facebook Ads, Instagram Ads) - Current
+• HubSpot Content Marketing Certification - 2023
+• Klaviyo Email Marketing Certification - 2022
+• Google Tag Manager Fundamentals - 2021
+
+PROJECTS & ACHIEVEMENTS
+
+E-commerce Growth Case Study
+• Scaled startup from $50K to $500K monthly revenue in 18 months
+• Implemented multi-channel marketing strategy across 8 different platforms
+• Built customer retention program increasing lifetime value by 45%
+
+Marketing Analytics Dashboard
+• Created comprehensive dashboard tracking 50+ KPIs across all marketing channels
+• Automated reporting reducing manual work by 20 hours per week
+• Enabled data-driven decision making for entire marketing team
+
+ADDITIONAL SKILLS
+• A/B Testing & Conversion Optimization
+• Customer Journey Mapping
+• Marketing Attribution Modeling
+• Influencer Relationship Management
+• Content Creation & Copywriting
+• Project Management (Asana, Monday.com)
+• Basic HTML/CSS and WordPress
+• Photography and Video Editing
+
+LANGUAGES
+• English (Native)
+• Spanish (Fluent)
+• Portuguese (Conversational)
+
+AWARDS & RECOGNITION
+• "Rising Star in Digital Marketing" - Austin Marketing Awards 2023
+• Top performer award for Q3 2022 campaign results
+• Featured speaker at Texas Digital Marketing Conference 2023
+"""
+}
 
 # Sidebar for API configuration with emojis
 with st.sidebar:
@@ -199,18 +633,46 @@ with st.sidebar:
             st.error(f"❌ Error configuring Gemini API: {str(e)}")
     
     st.markdown("---")
+    st.markdown("### 📄 Sample Documents")
+    
+    # Sample Job Descriptions
+    st.markdown("#### 📋 Job Descriptions")
+    for title, content in SAMPLE_JOB_DESCRIPTIONS.items():
+        if st.download_button(
+            f"📥 {title}",
+            content,
+            file_name=f"{title.replace(' - ', '_').replace(' ', '_').lower()}_job_description.txt",
+            mime="text/plain",
+            key=f"job_{title}",
+            use_container_width=True
+        ):
+            st.success(f"✅ Downloaded {title}")
+    
+    st.markdown("#### 📄 Sample Resumes")
+    for title, content in SAMPLE_RESUMES.items():
+        if st.download_button(
+            f"📥 {title}",
+            content,
+            file_name=f"{title.replace(' ', '_').lower()}.txt",
+            mime="text/plain",
+            key=f"resume_{title}",
+            use_container_width=True
+        ):
+            st.success(f"✅ Downloaded {title}")
+    
+    st.markdown("---")
     st.markdown("### 💡 About")
     st.info(
-        "🔎 This app uses AI to extract job requirements from job descriptions "
+        "🔎 This enhanced app uses AI to extract job requirements from multiple file formats "
         "and evaluates if your resume matches those requirements! "
-        "Increase your chances of getting an interview! 🏆"
+        "Now supports PDF, DOC, DOCX, and TXT files! 🏆"
     )
     
     # Tips section in sidebar
     st.markdown("### 📝 Tips for Best Results")
     st.markdown("""
-    - 📄 Upload clear, searchable PDFs
-    - 📋 Make sure your resume is up-to-date
+    - 📄 Upload clear, readable files in any supported format
+    - 📋 Try our sample documents to test the system
     - 📊 Update your resume based on the results
     - 💼 Focus on improving low-match areas
     - 🔄 Re-run the check after updating your resume
@@ -221,17 +683,35 @@ with st.sidebar:
 # Constants
 CHUNK_SIZE = 5000  # characters per chunk
 
-# Gemini Models
-def get_gemini_model():
-    """Get the appropriate Gemini model"""
+# Enhanced file processing functions
+def extract_text_from_docx(uploaded_file):
+    """Extract text from a DOCX file"""
     try:
-        # Use Gemini 1.0 Flash (free tier model)
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except:
-        # Fall back to Gemini 1.0 (free tier model)
-        return genai.GenerativeModel('gemini-1.0-pro')
+        doc = Document(BytesIO(uploaded_file.getvalue()))
+        full_text = []
+        for paragraph in doc.paragraphs:
+            full_text.append(paragraph.text)
+        return '\n'.join(full_text)
+    except Exception as e:
+        st.error(f"❌ Error extracting text from DOCX: {str(e)}")
+        return None
 
-# Utility Functions
+def extract_text_from_txt(uploaded_file):
+    """Extract text from a TXT file"""
+    try:
+        # Try different encodings
+        for encoding in ['utf-8', 'latin-1', 'cp1252']:
+            try:
+                content = uploaded_file.getvalue().decode(encoding)
+                return content
+            except UnicodeDecodeError:
+                continue
+        st.error("❌ Could not decode text file with common encodings")
+        return None
+    except Exception as e:
+        st.error(f"❌ Error extracting text from TXT: {str(e)}")
+        return None
+
 def extract_text_from_pdf(uploaded_file):
     """Extract text from an uploaded PDF file"""
     text = ""
@@ -247,19 +727,44 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"❌ Error extracting text from PDF: {str(e)}")
         return None
 
-def extract_text_from_multiple_pdfs(uploaded_files):
-    """Extract text from multiple uploaded PDF files"""
+def extract_text_from_file(uploaded_file):
+    """Extract text from any supported file format"""
+    file_extension = uploaded_file.name.lower().split('.')[-1]
+    
+    if file_extension == 'pdf':
+        return extract_text_from_pdf(uploaded_file)
+    elif file_extension in ['docx', 'doc']:
+        return extract_text_from_docx(uploaded_file)
+    elif file_extension == 'txt':
+        return extract_text_from_txt(uploaded_file)
+    else:
+        st.error(f"❌ Unsupported file format: {file_extension}")
+        return None
+
+def extract_text_from_multiple_files(uploaded_files):
+    """Extract text from multiple uploaded files of any supported format"""
     combined_text = ""
     file_texts = {}
     
     for uploaded_file in uploaded_files:
-        text = extract_text_from_pdf(uploaded_file)
+        text = extract_text_from_file(uploaded_file)
         if text:
             file_texts[uploaded_file.name] = text
             combined_text += f"\n\n--- {uploaded_file.name} ---\n\n{text}"
     
     return combined_text, file_texts
 
+# Gemini Models
+def get_gemini_model():
+    """Get the appropriate Gemini model"""
+    try:
+        # Use Gemini 1.0 Flash (free tier model)
+        return genai.GenerativeModel('gemini-1.5-flash')
+    except:
+        # Fall back to Gemini 1.0 (free tier model)
+        return genai.GenerativeModel('gemini-1.0-pro')
+
+# Utility Functions
 def split_text_into_chunks(text, chunk_size=CHUNK_SIZE):
     """Split text into manageable chunks"""
     return textwrap.wrap(text, chunk_size)
@@ -723,9 +1228,17 @@ if 'summary' not in st.session_state:
 if 'company_info' not in st.session_state:
     st.session_state.company_info = ""
 
-# Tab 1: Upload Documents (Enhanced)
+# Tab 1: Upload Documents (Enhanced with multi-format support)
 with tabs[0]:
     st.header("📤 Upload Job Description & Company Info")
+    
+    # Add sample documents section at the top
+    st.markdown("""
+    <div class="sample-docs">
+        <h4>🎯 New to the app? Try our sample documents!</h4>
+        <p>Download sample job descriptions and resumes from the sidebar to test the system quickly.</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
@@ -733,14 +1246,15 @@ with tabs[0]:
         st.markdown("""
         ### 📑 Step 1: Upload job description(s)
         
-        Upload one or more job posting PDFs to analyze the requirements.
+        **Supported formats**: PDF, DOC, DOCX, TXT
+        Upload one or more job posting files to analyze the requirements.
         """)
         
         uploaded_files = st.file_uploader(
-            "Choose Job Description PDF file(s)", 
-            type="pdf", 
+            "Choose Job Description file(s)", 
+            type=["pdf", "doc", "docx", "txt"], 
             accept_multiple_files=True,
-            help="Upload one or more job description PDFs to extract requirements"
+            help="Upload job description files in PDF, DOC, DOCX, or TXT format"
         )
         
         # Company information input
@@ -759,18 +1273,27 @@ with tabs[0]:
         st.markdown("### 🔍 Why This Matters")
         st.info("Multiple job descriptions help us get a comprehensive view of requirements! Company info helps personalize your documents! 🎯")
         
+        st.markdown("### 📄 Supported Formats")
+        st.markdown("""
+        - **PDF** 📄 - Portable Document Format
+        - **DOC/DOCX** 📝 - Microsoft Word Documents  
+        - **TXT** 📃 - Plain Text Files
+        """)
+        
         if uploaded_files:
             st.markdown("### 📄 Uploaded Files")
             for file in uploaded_files:
-                st.write(f"✅ {file.name}")
+                file_extension = file.name.split('.')[-1].upper()
+                emoji = {"PDF": "📄", "DOC": "📝", "DOCX": "📝", "TXT": "📃"}.get(file_extension, "📄")
+                st.write(f"{emoji} {file.name} ({file_extension})")
     
     if uploaded_files:
-        if st.button("🔍 Extract Text from PDFs", type="primary"):
-            with st.spinner("⏳ Extracting text from PDFs..."):
+        if st.button("🔍 Extract Text from Files", type="primary"):
+            with st.spinner("⏳ Extracting text from uploaded files..."):
                 if len(uploaded_files) == 1:
-                    job_desc_text = extract_text_from_pdf(uploaded_files[0])
+                    job_desc_text = extract_text_from_file(uploaded_files[0])
                 else:
-                    job_desc_text, file_texts = extract_text_from_multiple_pdfs(uploaded_files)
+                    job_desc_text, file_texts = extract_text_from_multiple_files(uploaded_files)
                     
                     # Show breakdown by file
                     with st.expander("📁 View text breakdown by file"):
@@ -788,14 +1311,14 @@ with tabs[0]:
                     
                     st.info("👉 Proceed to the '📋 Extract Requirements' tab to continue.")
                 else:
-                    st.error("❌ Failed to extract text from the PDF(s).")
+                    st.error("❌ Failed to extract text from the file(s).")
 
-# Tab 2: Extract Requirements (Same as before)
+# Tab 2: Extract Requirements
 with tabs[1]:
     st.header("📋 Extract Job Requirements")
     
     if st.session_state.job_desc_text is None:
-        st.info("🔍 Please upload job description PDF(s) in the '📤 Upload Documents' tab first.")
+        st.info("🔍 Please upload job description file(s) in the '📤 Upload Documents' tab first.")
     else:
         col1, col2 = st.columns([2, 1])
         
@@ -847,7 +1370,7 @@ with tabs[1]:
             st.markdown("### 🧩 What's Happening")
             st.info("Our AI is analyzing the job posting to identify specific skills, qualifications, and experience needed! 🔍")
 
-# Tab 3: Upload Resume (Enhanced for multiple files)
+# Tab 3: Upload Resume (Enhanced for multiple file formats)
 with tabs[2]:
     st.header("📝 Upload Your Resume(s)")
     
@@ -860,14 +1383,15 @@ with tabs[2]:
             st.markdown("""
             ### 📄 Step 3: Upload your resume(s)
             
+            **Supported formats**: PDF, DOC, DOCX, TXT
             Upload one or more versions of your resume to check how well they match the job requirements.
             """)
             
             resume_files = st.file_uploader(
-                "Choose your Resume PDF file(s)", 
-                type="pdf",
+                "Choose your Resume file(s)", 
+                type=["pdf", "doc", "docx", "txt"],
                 accept_multiple_files=True,
-                help="Upload one or more resume versions to evaluate against the job requirements"
+                help="Upload resume files in PDF, DOC, DOCX, or TXT format"
             )
             
             if resume_files:
@@ -876,9 +1400,9 @@ with tabs[2]:
                 if st.button("🔍 Process Resume(s)", type="primary"):
                     with st.spinner("⏳ Processing your resume(s)..."):
                         if len(resume_files) == 1:
-                            resume_text = extract_text_from_pdf(resume_files[0])
+                            resume_text = extract_text_from_file(resume_files[0])
                         else:
-                            resume_text, file_texts = extract_text_from_multiple_pdfs(resume_files)
+                            resume_text, file_texts = extract_text_from_multiple_files(resume_files)
                             
                             # Show breakdown by file
                             with st.expander("📁 View resume breakdown by file"):
@@ -916,6 +1440,13 @@ with tabs[2]:
             st.markdown("### 📊 What We're Looking For")
             st.info("We'll compare your resume(s) against the extracted job requirements and provide a detailed match analysis! 🔍")
             
+            st.markdown("### 📄 Supported Formats")
+            st.markdown("""
+            - **PDF** 📄 - Most common resume format
+            - **DOC/DOCX** 📝 - Microsoft Word Documents  
+            - **TXT** 📃 - Plain text resumes
+            """)
+            
             # Add tips for better resume matching
             st.markdown("### 💡 Resume Tips")
             st.markdown("""
@@ -928,7 +1459,9 @@ with tabs[2]:
             if resume_files:
                 st.markdown("### 📄 Uploaded Resume Files")
                 for file in resume_files:
-                    st.write(f"✅ {file.name}")
+                    file_extension = file.name.split('.')[-1].upper()
+                    emoji = {"PDF": "📄", "DOC": "📝", "DOCX": "📝", "TXT": "📃"}.get(file_extension, "📄")
+                    st.write(f"{emoji} {file.name} ({file_extension})")
 
 # Tab 4: Results (Enhanced with more visualizations)
 with tabs[3]:
@@ -1109,7 +1642,7 @@ REQUIREMENTS ANALYSIS:
             ):
                 st.success("✅ Successfully downloaded CSV data!")
 
-# Tab 5: Optimize & Generate (Fixed Tab)
+# Tab 5: Optimize & Generate
 with tabs[4]:
     st.header("🔧 Optimize Resume & Generate Cover Letter")
     
@@ -1360,7 +1893,10 @@ st.markdown("""
         <h3>🔍 Enhanced Resume Job Match Checker</h3>
         <p style="color:#4e54c8; font-weight:600;">Engineered with ❤️ by Shreyas Kasture for Data Enthusiasts</p>
         <p style="font-size:0.8rem; color:#7f8c8d;">
-            Features: Multi-file Support | Advanced Analytics | Resume Optimization | Cover Letter Generation
+            Features: Multi-Format Support (PDF, DOC, DOCX, TXT) | Sample Documents | Advanced Analytics | Resume Optimization | Cover Letter Generation
+        </p>
+        <p style="font-size:0.7rem; color:#95a5a6;">
+            🆕 Now supports multiple file formats for maximum compatibility!
         </p>
     </div>
 </div>
