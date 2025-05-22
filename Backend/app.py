@@ -10,688 +10,434 @@ import google.generativeai as genai
 from io import BytesIO
 from typing import Dict, List, Any
 import base64
-import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime
-import docx
-from docx import Document
-import openai
-import anthropic
-import requests
+import plotly.express as px
+from plotly.subplots import make_subplots
+import numpy as np
 
 # Streamlit page config
 st.set_page_config(
-    page_title="AI Resume Analyzer Pro",
-    page_icon="🚀",
+    page_title="Resume Job Match Checker",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# API Configuration
-OPENAI_API_KEY = "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"
-ANTHROPIC_API_KEY = "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"
-HUGGINGFACE_API_KEY = "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"
-PINECONE_API_KEY = "pcsk_MQWK7_PVT3wqroExRVr4QT2dVrWZHNrf7yTCJV1LXp14CoaMFp9yLx9Jn5Y32qcDV5Xx"
-ADZUNA_APP_ID = "aa08dca8"
-ADZUNA_API_KEY = "5a3964291d93cb468d63d3a6a3956210"
-RAPIDAPI_KEY = "8c34393a1dmsh6105bc185272fe3p19b523jsn7ab6aaf136de"
-
-# Initialize API clients
-openai.api_key = OPENAI_API_KEY
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
-# Enhanced CSS for modern UI
+# Custom CSS for better UI
 st.markdown("""
 <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    
-    /* Global Styling */
-    * {
-        font-family: 'Inter', sans-serif;
+    /* Main app styling */
+    .main {
+        background-color: #f8f9fa;
     }
     
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
+    /* Custom card styling */
+    div[data-testid="stVerticalBlock"] {
+        background-color: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
     }
     
     /* Header styling */
-    .main-header {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    
-    /* Card styling */
-    .custom-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-    }
-    
-    .custom-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    }
-    
-    /* Enhanced headers */
     h1 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #1e3a8a;
         font-weight: 800;
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
     }
     
     h2 {
-        color: #4a5568;
-        font-weight: 700;
-        margin-bottom: 1rem;
+        color: #1e3a8a;
+        font-weight: 600;
     }
     
     h3 {
-        color: #667eea;
-        font-weight: 600;
-        margin-bottom: 0.8rem;
+        color: #2563eb;
+        font-weight: 500;
     }
     
-    /* Enhanced buttons */
-    .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 15px;
-        padding: 12px 30px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    /* Button styling */
+    button[kind="primary"] {
+        background-color: #2563eb;
+        border-radius: 12px;
     }
     
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-    }
-    
-    /* Progress indicators */
-    .progress-container {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-    }
-    
-    .step-indicator {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-    }
-    
-    .step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-        position: relative;
-    }
-    
-    .step-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
-    }
-    
-    .step-active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    .step-completed {
-        background: #48bb78;
-        color: white;
-    }
-    
-    .step-inactive {
-        background: #e2e8f0;
-        color: #a0aec0;
-    }
-    
-    /* Score display */
-    .score-display {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-        color: white;
-        margin: 20px 0;
-    }
-    
-    .score-number {
-        font-size: 4rem;
-        font-weight: 800;
-        margin: 0;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    /* Metric cards */
-    .metric-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        margin: 10px 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    }
-    
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    
-    .metric-label {
-        color: #718096;
-        font-size: 0.9rem;
-        margin-top: 5px;
-    }
-    
-    /* Enhanced file uploader */
-    .stFileUploader {
-        border: 3px dashed #667eea;
-        border-radius: 20px;
-        padding: 40px;
-        background: rgba(102, 126, 234, 0.05);
-        transition: all 0.3s ease;
-    }
-    
-    .stFileUploader:hover {
-        border-color: #764ba2;
-        background: rgba(102, 126, 234, 0.1);
-    }
-    
-    /* Sidebar enhancements */
-    .css-1d391kg {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
+    button[kind="secondary"] {
+        border-radius: 12px;
     }
     
     /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
+    button[data-baseweb="tab"] {
+        font-weight: 600;
+        border-radius: 10px 10px 0px 0px;
+    }
+    
+    div[role="tablist"] {
+        background-color: #f1f5f9;
+        border-radius: 10px 10px 0px 0px;
+    }
+    
+    /* Expander styling */
+    details {
+        background-color: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    summary {
         padding: 10px;
+        font-weight: 500;
     }
     
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
+    /* File uploader */
+    div[data-testid="stFileUploader"] {
+        border: 2px dashed #2563eb;
         border-radius: 12px;
-        color: #4a5568;
-        font-weight: 600;
-        padding: 12px 20px;
-        transition: all 0.3s ease;
+        padding: 20px;
     }
     
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    /* Success message */
+    div[data-baseweb="notification"] {
+        border-radius: 10px;
     }
     
-    /* Enhanced alerts */
-    .stAlert {
-        border-radius: 15px;
-        border: none;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    /* Progress bar */
+    div[role="progressbar"] {
+        border-radius: 10px;
+        height: 8px;
     }
     
-    /* Loading animations */
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+    /* Dataframe styling */
+    .dataframe {
+        border-radius: 10px;
+        overflow: hidden;
     }
     
-    .loading {
-        animation: pulse 2s infinite;
-    }
-    
-    /* Footer */
-    .footer {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 20px;
-        padding: 30px;
+    /* Match score styling */
+    .match-score {
+        font-size: 48px;
+        font-weight: bold;
         text-align: center;
-        margin-top: 50px;
-        backdrop-filter: blur(10px);
     }
-    
-    /* Requirement badges */
-    .req-badge {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: 600;
-        margin: 5px;
-        transition: all 0.3s ease;
-    }
-    
-    .req-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    .badge-excellent {
-        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-        color: white;
-    }
-    
-    .badge-good {
-        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-        color: white;
-    }
-    
-    .badge-poor {
-        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-        color: white;
-    }
-    
-    /* Statistics dashboard */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin: 20px 0;
-    }
-    
-    /* Developer credit */
-    .developer-credit {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-weight: 600;
+    /* Footer Styling */
+    .footer {
+        text-align: center;
+        margin-top: 3rem;
+        color: #7f8c8d;
         font-size: 0.9rem;
-        margin: 10px 0;
-        display: inline-block;
+        padding-top: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .footer:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
     }
     
-    /* Responsive design */
-    @media (max-width: 768px) {
-        h1 { font-size: 2rem; }
-        .score-number { font-size: 3rem; }
-        .custom-card { padding: 15px; }
+    /* Badge styling */
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-weight: 500;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .badge-green {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+    
+    .badge-yellow {
+        background-color: #fef9c3;
+        color: #854d0e;
+    }
+    
+    .badge-red {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    /* Enhanced chart container */
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin: 10px 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Enhanced header
+# App title with emojis
+st.title("🚀 Resume Job Match Checker 📝")
+
+# App description with emojis
 st.markdown("""
-<div class="main-header">
-    <h1>🚀 AI Resume Analyzer Pro</h1>
-    <p style="font-size: 1.2rem; color: #4a5568; margin: 0;">
-        Advanced AI-powered resume matching with comprehensive analytics
-    </p>
-    <div class="developer-credit">
-        Developed with ❤️ by Shreyas Kasture
-    </div>
-</div>
-""", unsafe_allow_html=True)
+### 🔍 Find out if your resume matches the job requirements! 💯
 
-# Progress indicator function
-def show_progress_indicator(current_step):
-    steps = [
-        ("1", "Upload Job", "job"),
-        ("2", "Extract Requirements", "extract"),
-        ("3", "Upload Resume", "resume"),
-        ("4", "View Results", "results")
-    ]
-    
-    step_html = '<div class="progress-container"><div class="step-indicator">'
-    
-    for i, (num, title, key) in enumerate(steps):
-        if current_step not in st.session_state:
-            st.session_state.current_step = 0
-        elif i < current_step:
-            circle_class = "step-circle step-completed"
-            icon = "✓"
-        elif i == current_step:
-            circle_class = "step-circle step-active"
-            icon = num
-        else:
-            circle_class = "step-circle step-inactive"
-            icon = num
-              
-        if i < len(steps) - 1:
-            line_color = "#667eea" if i < current_step else "#e2e8f0"
-            step_html += f'<div style="flex: 1; height: 2px; background: {line_color}; margin: 20px 10px 0 10px;"></div>'
-    
-    step_html += '</div></div>'
-    st.markdown(step_html, unsafe_allow_html=True)
+This app extracts job requirements from job descriptions and evaluates 
+whether your resume meets those requirements in seconds! 🎯
+""")
 
-# Enhanced sidebar with developer credit
+# Sidebar for API configuration with emojis
 with st.sidebar:
-    st.markdown("""
-    <div style="text-align: center; padding: 20px;">
-        <h2>⚙️ Configuration</h2>
-        <div class="developer-credit" style="font-size: 0.8rem; padding: 5px 15px;">
-            Made with ❤️ by Shreyas Kasture
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### ⚙️ API Configuration")
+    st.markdown("---")
     
-    # API Configuration
-    with st.expander("🔑 API Settings", expanded=True):
-        gemini_api_key = st.text_input(
-            "Gemini API Key", 
-            type="password",
-            help="Get your free API key from Google AI Studio",
-            placeholder="Enter your Gemini API key..."
-        )
-        
-        if gemini_api_key:
-            try:
-                genai.configure(api_key=gemini_api_key)
-                st.success("✅ API configured successfully!")
-            except Exception as e:
-                st.error(f"❌ API configuration failed: {str(e)}")
+    gemini_api_key = st.text_input("🔑 Gemini API Key", type="password", 
+                                  help="Get a free API key from https://aistudio.google.com/app/apikey")
     
-    # Analysis Settings
-    with st.expander("🎛️ Analysis Settings"):
-        st.markdown("**Matching Sensitivity**")
-        sensitivity = st.select_slider(
-            "Select matching sensitivity",
-            options=["Strict", "Balanced", "Lenient"],
-            value="Balanced",
-            help="Adjust how strictly requirements are matched"
-        )
-        
-        st.markdown("**Analysis Depth**")
-        analysis_depth = st.selectbox(
-            "Choose analysis depth",
-            ["Quick Scan", "Standard Analysis", "Deep Analysis"],
-            index=1,
-            help="Select how detailed the analysis should be"
-        )
-        
-        include_suggestions = st.checkbox(
-            "Include improvement suggestions",
-            value=True,
-            help="Generate actionable improvement recommendations"
-        )
-    
-    # Quick Stats
-    if 'evaluation' in st.session_state and st.session_state.evaluation:
-        st.markdown("### 📊 Quick Stats")
-        eval_data = st.session_state.evaluation
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            overall_score = eval_data.get('overall_match_percentage', 0)
-            # Ensure score is numeric
-            if overall_score is None:
-                overall_score = 0
-            elif isinstance(overall_score, str):
-                try:
-                    overall_score = float(overall_score)
-                except (ValueError, TypeError):
-                    overall_score = 0
-            st.metric("Match Score", f"{overall_score}%")
-        with col2:
-            requirements_met = 0
-            total_requirements = 0
-            if 'requirements_evaluation' in eval_data and eval_data['requirements_evaluation']:
-                for req_data in eval_data['requirements_evaluation'].values():
-                    if isinstance(req_data, dict):
-                        if req_data.get('meets_requirement', False):
-                            requirements_met += 1
-                        total_requirements += 1
-            st.metric("Requirements Met", f"{requirements_met}/{total_requirements}")
-    
-    # Tips and Help
-    with st.expander("💡 Pro Tips"):
-        st.markdown("""
-        **For Best Results:**
-        - Use recent, well-formatted PDFs
-        - Include relevant keywords from job posting
-        - Quantify achievements with numbers
-        - Keep format clean and ATS-friendly
-        - Focus on skills mentioned in job description
-        """)
+    if gemini_api_key:
+        try:
+            # Configure Gemini API
+            genai.configure(api_key=gemini_api_key)
+            st.success("✅ Gemini API configured successfully!")
+        except Exception as e:
+            st.error(f"❌ Error configuring Gemini API: {str(e)}")
     
     st.markdown("---")
+    st.markdown("### 💡 About")
+    st.info(
+        "🔎 This app uses AI to extract job requirements from job descriptions "
+        "and evaluates if your resume matches those requirements! "
+        "Increase your chances of getting an interview! 🏆"
+    )
+    
+    # Tips section in sidebar
+    st.markdown("### 📝 Tips for Best Results")
     st.markdown("""
-    <div style="text-align: center; padding: 10px;">
-        <p style="color: #667eea; font-weight: 600;">
-            Powered by Multiple AI Models
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    - 📄 Upload clear, searchable PDFs
+    - 📋 Make sure your resume is up-to-date
+    - 📊 Update your resume based on the results
+    - 💼 Focus on improving low-match areas
+    - 🔄 Re-run the check after updating your resume
+    """)
+    st.markdown("---")
+    st.markdown("Developed By Shreyas Kasture")
 
-# Constants and Configuration
-CHUNK_SIZE = 5000
-SUPPORTED_FORMATS = ["pdf", "docx", "txt"]
+# Constants
+CHUNK_SIZE = 5000  # characters per chunk
 
-# Utility functions for API integration
-def get_openai_response(prompt, model="gpt-3.5-turbo"):
-    """Get response from OpenAI API"""
+# Gemini Models
+def get_gemini_model():
+    """Get the appropriate Gemini model"""
     try:
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=2000,
-            temperature=0.7
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        st.error(f"OpenAI API Error: {str(e)}")
-        return None
+        # Use Gemini 1.0 Flash (free tier model)
+        return genai.GenerativeModel('gemini-1.5-flash')
+    except:
+        # Fall back to Gemini 1.0 (free tier model)
+        return genai.GenerativeModel('gemini-1.0-pro')
 
-def get_anthropic_response(prompt):
-    """Get response from Anthropic Claude API"""
-    try:
-        response = anthropic_client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.content[0].text
-    except Exception as e:
-        st.error(f"Anthropic API Error: {str(e)}")
-        return None
-
-def get_job_market_data(job_title, location="United States"):
-    """Get job market data from Adzuna API"""
-    try:
-        url = f"https://api.adzuna.com/v1/api/jobs/{location}/search/1"
-        params = {
-            'app_id': ADZUNA_APP_ID,
-            'app_key': ADZUNA_API_KEY,
-            'what': job_title,
-            'results_per_page': 20
-        }
-        
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            return response.json()
-        return None
-    except Exception as e:
-        st.error(f"Job market data error: {str(e)}")
-        return None
-
-def get_salary_insights(job_title):
-    """Get salary insights using RapidAPI"""
-    try:
-        url = "https://job-salary-data.p.rapidapi.com/job-salary"
-        headers = {
-            "X-RapidAPI-Key": RAPIDAPI_KEY,
-            "X-RapidAPI-Host": "job-salary-data.p.rapidapi.com"
-        }
-        params = {"job_title": job_title, "location": "United States"}
-        
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 200:
-            return response.json()
-        return None
-    except Exception as e:
-        st.error(f"Salary insights error: {str(e)}")
-        return None
-
-# Enhanced utility functions
-def extract_text_from_file(uploaded_file):
-    """Extract text from various file formats"""
-    try:
-        file_extension = uploaded_file.name.split('.')[-1].lower()
-        
-        if file_extension == 'pdf':
-            return extract_text_from_pdf(uploaded_file)
-        elif file_extension == 'docx':
-            return extract_text_from_docx(uploaded_file)
-        elif file_extension == 'txt':
-            return uploaded_file.getvalue().decode('utf-8')
-        else:
-            st.error(f"❌ Unsupported file format: {file_extension}")
-            return None
-    except Exception as e:
-        st.error(f"❌ Error extracting text: {str(e)}")
-        return None
-
+# Utility Functions
 def extract_text_from_pdf(uploaded_file):
-    """Enhanced PDF text extraction"""
+    """Extract text from an uploaded PDF file"""
     text = ""
     try:
         pdf_file = BytesIO(uploaded_file.getvalue())
         reader = PyPDF2.PdfReader(pdf_file)
-        
-        for page_num, page in enumerate(reader.pages):
+        for page in reader.pages:
             page_text = page.extract_text()
             if page_text:
-                text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
-        
-        return text.strip()
+                text += page_text + "\n"
+        return text
     except Exception as e:
-        st.error(f"❌ PDF extraction error: {str(e)}")
+        st.error(f"❌ Error extracting text from PDF: {str(e)}")
         return None
 
-def extract_text_from_docx(uploaded_file):
-    """Extract text from DOCX files"""
-    try:
-        doc = Document(BytesIO(uploaded_file.getvalue()))
-        text = ""
-        for paragraph in doc.paragraphs:
-            text += paragraph.text + "\n"
-        return text.strip()
-    except Exception as e:
-        st.error(f"❌ DOCX extraction error: {str(e)}")
-        return None
+def extract_text_from_multiple_pdfs(uploaded_files):
+    """Extract text from multiple uploaded PDF files"""
+    combined_text = ""
+    file_texts = {}
+    
+    for uploaded_file in uploaded_files:
+        text = extract_text_from_pdf(uploaded_file)
+        if text:
+            file_texts[uploaded_file.name] = text
+            combined_text += f"\n\n--- {uploaded_file.name} ---\n\n{text}"
+    
+    return combined_text, file_texts
 
-def get_gemini_model():
-    """Get the appropriate Gemini model with error handling"""
+def split_text_into_chunks(text, chunk_size=CHUNK_SIZE):
+    """Split text into manageable chunks"""
+    return textwrap.wrap(text, chunk_size)
+
+def build_extraction_prompt(chunk):
+    """Build prompt for job requirements extraction"""
+    return f"""
+From the following job description content, extract only the key job requirements
+(such as skills, experience, education, certifications, etc.).
+
+Return a valid JSON object with clear key-value pairs. Do not include explanation or surrounding text.
+Structure the JSON as:
+{{
+  "requirement_name_1": "detailed requirement description 1",
+  "requirement_name_2": "detailed requirement description 2",
+  ...
+}}
+
+Use clear, descriptive keys like "experience_requirements", "technical_skills", "education_requirements", etc.
+
+Text:
+{chunk}
+"""
+
+def build_evaluation_prompt(requirements_json, resume_text):
+    """Build prompt for resume evaluation"""
+    return f"""
+You are an expert resume analyst. Your task is to evaluate whether a resume meets the job requirements.
+
+JOB REQUIREMENTS:
+{json.dumps(requirements_json, indent=2)}
+
+RESUME CONTENT:
+{resume_text}
+
+Please analyze if the resume meets each of the job requirements. Pay special attention to:
+1. Experience requirements (years of experience, specific domains)
+2. Technical skills and competencies
+3. Education requirements
+4. Certifications and qualifications
+
+For each requirement, determine if the resume meets it based on the content provided.
+If there are specific numerical requirements (e.g., "5 years of experience"), check if the resume meets those exact requirements.
+
+Provide your assessment in the following JSON format:
+{{
+  "overall_match_percentage": 85,  // A number between 0-100 representing the overall match
+  "requirements_evaluation": {{
+    "requirement_name_1": {{
+      "meets_requirement": true/false,
+      "explanation": "Detailed explanation of why the resume meets or doesn't meet this requirement",
+      "confidence": "high/medium/low",
+      "match_score": 90  // A number between 0-100 for this specific requirement
+    }},
+    "requirement_name_2": {{
+      "meets_requirement": true/false,
+      "explanation": "Detailed explanation of why the resume meets or doesn't meet this requirement",
+      "confidence": "high/medium/low",
+      "match_score": 70
+    }},
+    ...
+  }},
+  "strengths": ["Strength 1", "Strength 2", ...],  // List of resume strengths related to the job
+  "gaps": ["Gap 1", "Gap 2", ...],  // List of gaps or missing requirements
+  "improvement_suggestions": ["Suggestion 1", "Suggestion 2", ...],  // Actionable suggestions to improve match
+  "summary": "A brief summary of the overall match assessment"
+}}
+
+Only respond with the JSON object, no additional text.
+"""
+
+def build_resume_optimization_prompt(job_requirements, current_resume, company_info=""):
+    """Build prompt for generating optimized resume"""
+    return f"""
+You are an expert resume writer and career coach. Based on the job requirements and current resume provided, create an optimized version that better matches the job requirements while maintaining authenticity.
+
+JOB REQUIREMENTS:
+{json.dumps(job_requirements, indent=2)}
+
+CURRENT RESUME:
+{current_resume}
+
+COMPANY INFORMATION:
+{company_info}
+
+Please create an optimized resume that:
+1. Highlights relevant skills and experiences that match the job requirements
+2. Uses keywords from the job description naturally
+3. Reorganizes content to emphasize the most relevant qualifications
+4. Maintains truthfulness while presenting information in the best light
+5. Follows modern resume best practices
+
+Provide the optimized resume in a clear, professional format with proper sections (Summary, Experience, Skills, Education, etc.).
+Make sure the content is truthful and based on the original resume content.
+
+Return only the optimized resume content, properly formatted.
+"""
+
+def build_cover_letter_prompt(job_requirements, resume_text, company_info=""):
+    """Build prompt for generating cover letter"""
+    return f"""
+You are an expert career coach and cover letter writer. Create a compelling cover letter based on the job requirements, resume, and company information provided.
+
+JOB REQUIREMENTS:
+{json.dumps(job_requirements, indent=2)}
+
+RESUME CONTENT:
+{resume_text}
+
+COMPANY INFORMATION:
+{company_info}
+
+Create a professional cover letter that:
+1. Addresses the specific job requirements
+2. Highlights relevant experiences from the resume
+3. Shows enthusiasm for the company and role
+4. Demonstrates understanding of the company's needs
+5. Maintains a professional yet personable tone
+6. Is concise (3-4 paragraphs)
+
+Structure the cover letter with:
+- Professional header
+- Compelling opening paragraph
+- 1-2 body paragraphs highlighting relevant qualifications
+- Strong closing paragraph with call to action
+
+Return only the cover letter content, properly formatted.
+"""
+
+def extract_valid_json(text):
+    """Extract valid JSON from text response"""
     try:
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except:
+        # Try direct JSON parsing first
+        return json.loads(text)
+    except json.JSONDecodeError:
         try:
-            return genai.GenerativeModel('gemini-1.0-pro')
+            # Try to find JSON within the text
+            json_match = re.search(r'({.*})', text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                return json.loads(json_str)
+            else:
+                st.error("❌ Could not extract valid JSON from response")
+                return None
         except Exception as e:
-            st.error(f"❌ Model initialization failed: {str(e)}")
+            st.error(f"❌ JSON parsing failed: {str(e)}")
             return None
 
-def safe_get_score(data, key, default=0):
-    """Safely get score value and ensure it's numeric"""
-    value = data.get(key, default)
-    if value is None:
-        return default
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return default
-
-def create_match_visualization(evaluation):
-    """Create interactive match score visualization"""
-    if not evaluation or 'requirements_evaluation' not in evaluation:
+def query_gemini(prompt):
+    """Query the Gemini API"""
+    if not gemini_api_key:
+        st.error("❌ Please configure your Gemini API key in the sidebar first.")
         return None
-    
-    # Prepare data for visualization
-    requirements = []
-    scores = []
-    statuses = []
-    
-    for req, data in evaluation['requirements_evaluation'].items():
-        requirements.append(req.replace('_', ' ').title())
-        score = safe_get_score(data, 'match_score', 0)
-        scores.append(score)
-        statuses.append('Meets' if data.get('meets_requirement', False) else 'Does not meet')
-    
-    # Create horizontal bar chart
-    fig = go.Figure()
-    
-    colors = []
-    for score in scores:
-        if score >= 80:
-            colors.append('#48bb78')
-        elif score >= 50:
-            colors.append('#ed8936')
-        else:
-            colors.append('#f56565')
-    
-    fig.add_trace(go.Bar(
-        y=requirements,
-        x=scores,
-        orientation='h',
-        marker_color=colors,
-        text=[f'{score}%' for score in scores],
-        textposition='inside',
-        hovertemplate='<b>%{y}</b><br>Score: %{x}%<extra></extra>'
-    ))
-    
-    fig.update_layout(
-        title="Requirements Match Analysis",
-        xaxis_title="Match Score (%)",
-        yaxis_title="Requirements",
-        template="plotly_white",
-        height=max(400, len(requirements) * 40),
-        showlegend=False
-    )
-    
-    return fig
+        
+    try:
+        model = get_gemini_model()
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        st.error(f"❌ Error querying Gemini API: {str(e)}")
+        return None
 
-def create_score_gauge(score):
-    """Create a gauge chart for overall match score"""
-    # Ensure score is numeric
-    score = safe_get_score({'score': score}, 'score', 0)
-    
+# Visualization Functions
+def create_match_score_gauge(score):
+    """Create a gauge chart for match score"""
     fig = go.Figure(go.Indicator(
         mode = "gauge+number+delta",
         value = score,
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': "Overall Match Score"},
-        delta = {'reference': 70},
+        delta = {'reference': 75},
         gauge = {
             'axis': {'range': [None, 100]},
-            'bar': {'color': "#667eea"},
+            'bar': {'color': "darkblue"},
             'steps': [
-                {'range': [0, 50], 'color': "#fee2e2"},
-                {'range': [50, 75], 'color': "#fef9c3"},
-                {'range': [75, 100], 'color': "#dcfce7"}
+                {'range': [0, 50], 'color': "lightgray"},
+                {'range': [50, 75], 'color': "yellow"},
+                {'range': [75, 100], 'color': "lightgreen"}
             ],
             'threshold': {
                 'line': {'color': "red", 'width': 4},
@@ -701,118 +447,17 @@ def create_score_gauge(score):
         }
     ))
     
-    fig.update_layout(height=400, template="plotly_white")
+    fig.update_layout(height=300)
     return fig
 
-def generate_optimized_resume(original_resume, job_requirements, missing_keywords):
-    """Generate an optimized resume using AI"""
-    prompt = f"""
-You are a professional resume writer and career coach. Based on the original resume and job requirements, create an optimized version that:
-
-1. Incorporates missing keywords naturally
-2. Restructures content for better ATS compatibility
-3. Quantifies achievements where possible
-4. Improves formatting and readability
-5. Maintains authenticity while enhancing relevance
-
-ORIGINAL RESUME:
-{original_resume}
-
-JOB REQUIREMENTS:
-{json.dumps(job_requirements, indent=2)}
-
-MISSING KEYWORDS TO INCORPORATE:
-{', '.join(missing_keywords)}
-
-Please provide:
-1. An optimized resume version
-2. A summary of key improvements made
-3. Specific sections that were enhanced
-
-Format the response as JSON with keys: 'optimized_resume', 'improvements_summary', 'enhanced_sections'
-"""
-    
-    # Try multiple AI services for better results
-    for service in ['anthropic', 'openai', 'gemini']:
-        try:
-            if service == 'anthropic':
-                response = get_anthropic_response(prompt)
-            elif service == 'openai':
-                response = get_openai_response(prompt, "gpt-4")
-            else:  # gemini
-                model = get_gemini_model()
-                if model:
-                    response = model.generate_content(prompt).text
-                else:
-                    continue
-                    
-            if response:
-                return extract_enhanced_json(response)
-        except Exception as e:
-            st.warning(f"Service {service} unavailable: {str(e)}")
-            continue
-    
-    return None
-
-def generate_cover_letter(resume_text, job_requirements, company_info=""):
-    """Generate a personalized cover letter"""
-    prompt = f"""
-Create a compelling, personalized cover letter based on the resume and job requirements.
-
-RESUME CONTENT:
-{resume_text}
-
-JOB REQUIREMENTS:
-{json.dumps(job_requirements, indent=2)}
-
-COMPANY INFO:
-{company_info}
-
-The cover letter should:
-1. Be professional yet engaging
-2. Highlight relevant achievements from the resume
-3. Address key job requirements
-4. Show genuine interest in the role
-5. Be 3-4 paragraphs long
-6. Include a strong opening and closing
-
-Format as JSON with keys: 'cover_letter', 'key_highlights', 'personalization_notes'
-"""
-    
-    # Try multiple AI services
-    for service in ['anthropic', 'openai', 'gemini']:
-        try:
-            if service == 'anthropic':
-                response = get_anthropic_response(prompt)
-            elif service == 'openai':
-                response = get_openai_response(prompt, "gpt-4")
-            else:  # gemini
-                model = get_gemini_model()
-                if model:
-                    response = model.generate_content(prompt).text
-                else:
-                    continue
-                    
-            if response:
-                return extract_enhanced_json(response)
-        except Exception as e:
-            st.warning(f"Service {service} unavailable: {str(e)}")
-            continue
-    
-    return None
-
-def create_skills_radar_chart(evaluation):
-    """Create a radar chart for skills analysis"""
-    if not evaluation or 'requirements_evaluation' not in evaluation:
-        return None
-    
+def create_requirements_radar_chart(requirements_evaluation):
+    """Create a radar chart for requirements match"""
     categories = []
     scores = []
     
-    for category, data in evaluation['requirements_evaluation'].items():
-        categories.append(category.replace('_', ' ').title())
-        score = safe_get_score(data, 'overall_score', 0)
-        scores.append(score)
+    for req, result in requirements_evaluation.items():
+        categories.append(req.replace('_', ' ').title())
+        scores.append(result.get('match_score', 0))
     
     fig = go.Figure()
     
@@ -820,20 +465,8 @@ def create_skills_radar_chart(evaluation):
         r=scores,
         theta=categories,
         fill='toself',
-        name='Your Profile',
-        line_color='#667eea',
-        fillcolor='rgba(102, 126, 234, 0.3)'
-    ))
-    
-    # Add industry benchmark (simulated)
-    benchmark_scores = [max(70, score * 0.9) for score in scores]
-    fig.add_trace(go.Scatterpolar(
-        r=benchmark_scores,
-        theta=categories,
-        fill='toself',
-        name='Industry Benchmark',
-        line_color='#f56565',
-        fillcolor='rgba(245, 101, 101, 0.2)'
+        name='Match Scores',
+        line_color='blue'
     ))
     
     fig.update_layout(
@@ -843,259 +476,100 @@ def create_skills_radar_chart(evaluation):
                 range=[0, 100]
             )),
         showlegend=True,
-        title="Skills Profile vs Industry Benchmark",
-        template="plotly_white"
+        title="Requirements Match Analysis",
+        height=500
     )
     
     return fig
 
-def create_improvement_timeline(evaluation):
-    """Create a timeline visualization for improvement suggestions"""
-    if not evaluation or 'improvement_suggestions' not in evaluation:
-        return None
+def create_requirements_bar_chart(requirements_evaluation):
+    """Create a horizontal bar chart for requirements"""
+    reqs = []
+    scores = []
+    colors = []
     
-    suggestions = evaluation['improvement_suggestions']
+    for req, result in requirements_evaluation.items():
+        reqs.append(req.replace('_', ' ').title())
+        score = result.get('match_score', 0)
+        scores.append(score)
+        
+        if score >= 80:
+            colors.append('#15803d')
+        elif score >= 50:
+            colors.append('#ca8a04')
+        else:
+            colors.append('#b91c1c')
     
-    # Prepare timeline data
-    timeline_data = []
-    colors = ['#667eea', '#ed8936', '#48bb78']
+    fig = go.Figure(go.Bar(
+        x=scores,
+        y=reqs,
+        orientation='h',
+        marker_color=colors,
+        text=[f'{score}%' for score in scores],
+        textposition='inside'
+    ))
     
-    for i, (timeframe, items) in enumerate(suggestions.items()):
-        if isinstance(items, list):
-            for j, item in enumerate(items):
-                timeline_data.append({
-                    'Task': item,
-                    'Start': f'2024-{i+1:02d}-01',
-                    'Finish': f'2024-{i+2:02d}-01',
-                    'Resource': timeframe.title(),
-                    'Priority': len(items) - j
-                })
-    
-    if not timeline_data:
-        return None
-    
-    df = pd.DataFrame(timeline_data)
-    
-    fig = px.timeline(df, x_start="Start", x_end="Finish", y="Task", 
-                     color="Resource", title="Improvement Action Plan")
-    fig.update_yaxes(autorange="reversed")
-    fig.update_layout(template="plotly_white")
+    fig.update_layout(
+        title="Requirements Match Breakdown",
+        xaxis_title="Match Percentage",
+        yaxis_title="Requirements",
+        height=max(400, len(reqs) * 30)
+    )
     
     return fig
 
-def get_market_analytics(job_title):
-    """Get comprehensive market analytics"""
-    analytics = {
-        'job_market_data': get_job_market_data(job_title),
-        'salary_insights': get_salary_insights(job_title),
-        'trending_skills': [],
-        'market_demand': 'Medium'
-    }
+def create_skills_gap_analysis(evaluation):
+    """Create a skills gap analysis chart"""
+    strengths = evaluation.get('strengths', [])
+    gaps = evaluation.get('gaps', [])
     
-    # Simulate trending skills based on job title
-    tech_skills = ['Python', 'Machine Learning', 'Cloud Computing', 'Data Analysis', 'API Development']
-    soft_skills = ['Communication', 'Leadership', 'Problem Solving', 'Team Collaboration']
+    categories = ['Strengths', 'Gaps']
+    values = [len(strengths), len(gaps)]
+    colors = ['#15803d', '#b91c1c']
     
-    analytics['trending_skills'] = tech_skills + soft_skills
+    fig = go.Figure(data=[
+        go.Bar(x=categories, y=values, marker_color=colors)
+    ])
     
-    return analytics
-
-# Enhanced prompt building functions
-def build_enhanced_extraction_prompt(chunk, sensitivity="Balanced"):
-    """Build enhanced prompt for job requirements extraction"""
-    sensitivity_instructions = {
-        "Strict": "Focus only on explicitly stated requirements. Do not infer or assume requirements.",
-        "Balanced": "Extract both explicit and reasonably implied requirements from context.",
-        "Lenient": "Extract all possible requirements, including those that might be implied or preferred."
-    }
+    fig.update_layout(
+        title="Strengths vs Gaps Analysis",
+        yaxis_title="Count",
+        height=300
+    )
     
-    return f"""
-You are an expert HR analyst specializing in job requirement extraction. 
+    return fig
 
-ANALYSIS APPROACH: {sensitivity_instructions[sensitivity]}
-
-From the following job description content, extract comprehensive job requirements including:
-- Technical skills and competencies
-- Years of experience (be specific about numbers)
-- Educational requirements
-- Certifications and licenses
-- Soft skills and personal attributes
-- Industry knowledge
-- Tools and software proficiency
-- Language requirements
-- Travel or location requirements
-
-Return a detailed JSON object with clear categorization:
-
-{{
-  "technical_skills": {{
-    "programming_languages": ["skill1", "skill2"],
-    "frameworks_tools": ["tool1", "tool2"],
-    "databases": ["db1", "db2"]
-  }},
-  "experience_requirements": {{
-    "years_required": "X years",
-    "industry_experience": "specific industry",
-    "role_experience": "specific role type"
-  }},
-  "education_requirements": {{
-    "degree_level": "Bachelor's/Master's/PhD",
-    "field_of_study": "specific field",
-    "alternative_experience": "if degree not required"
-  }},
-  "certifications": ["cert1", "cert2"],
-  "soft_skills": ["skill1", "skill2"],
-  "additional_requirements": {{
-    "languages": ["language1", "language2"],
-    "travel": "travel percentage",
-    "location": "location requirements"
-  }}
-}}
-
-Text to analyze:
-{chunk}
-"""
-
-def build_enhanced_evaluation_prompt(requirements_json, resume_text, sensitivity="Balanced", analysis_depth="Standard"):
-    """Build enhanced evaluation prompt"""
+def create_confidence_distribution(requirements_evaluation):
+    """Create confidence level distribution chart"""
+    confidence_counts = {'High': 0, 'Medium': 0, 'Low': 0}
     
-    depth_instructions = {
-        "Quick Scan": "Provide a quick assessment focusing on key matches and mismatches.",
-        "Standard Analysis": "Provide a thorough analysis with detailed explanations for each requirement.",
-        "Deep Analysis": "Conduct an exhaustive analysis including subtle matches, potential, and growth areas."
-    }
+    for req, result in requirements_evaluation.items():
+        confidence = result.get('confidence', 'medium').lower()
+        if confidence in ['high', 'medium', 'low']:
+            confidence_counts[confidence.capitalize()] += 1
     
-    return f"""
-You are a senior HR consultant and resume analyst with 15+ years of experience in talent acquisition.
-
-ANALYSIS DEPTH: {depth_instructions[analysis_depth]}
-MATCHING SENSITIVITY: {sensitivity}
-
-Analyze the resume against the job requirements with the following methodology:
-
-1. **Requirement Matching**: For each requirement, determine if the resume demonstrates it
-2. **Evidence Assessment**: Look for specific examples, achievements, and keywords
-3. **Experience Validation**: Verify experience claims match requirements
-4. **Skill Evaluation**: Assess technical and soft skills comprehensively
-5. **Potential Assessment**: Consider transferable skills and learning capacity
-
-JOB REQUIREMENTS:
-{json.dumps(requirements_json, indent=2)}
-
-RESUME CONTENT:
-{resume_text}
-
-Provide comprehensive analysis in this JSON format:
-{{
-  "overall_match_percentage": 85,
-  "confidence_level": "high/medium/low",
-  "requirements_evaluation": {{
-    "requirement_category": {{
-      "overall_score": 80,
-      "detailed_requirements": {{
-        "specific_requirement": {{
-          "meets_requirement": true/false,
-          "match_score": 85,
-          "evidence_found": ["evidence1", "evidence2"],
-          "explanation": "detailed explanation",
-          "confidence": "high/medium/low",
-          "improvement_potential": "high/medium/low"
-        }}
-      }}
-    }}
-  }},
-  "strengths": ["strength1", "strength2"],
-  "gaps": ["gap1", "gap2"],
-  "red_flags": ["flag1", "flag2"],
-  "improvement_suggestions": {{
-    "immediate": ["suggestion1", "suggestion2"],
-    "medium_term": ["suggestion1", "suggestion2"],
-    "long_term": ["suggestion1", "suggestion2"]
-  }},
-  "keyword_analysis": {{
-    "matched_keywords": ["keyword1", "keyword2"],
-    "missing_keywords": ["keyword1", "keyword2"],
-    "keyword_density": "high/medium/low"
-  }},
-  "experience_analysis": {{
-    "total_years_found": "X years",
-    "relevant_experience": "X years",
-    "experience_quality": "high/medium/low",
-    "progression_evident": true/false
-  }},
-  "ats_compatibility": {{
-    "score": 85,
-    "issues": ["issue1", "issue2"],
-    "recommendations": ["rec1", "rec2"]
-  }},
-  "competitive_assessment": {{
-    "market_position": "strong/average/weak",
-    "unique_selling_points": ["usp1", "usp2"],
-    "differentiators": ["diff1", "diff2"]
-  }},
-  "summary": "comprehensive summary of the analysis"
-}}
-
-Focus on providing actionable insights and specific recommendations.
-"""
-
-def query_gemini_with_retry(prompt, max_retries=3):
-    """Query Gemini API with retry logic"""
-    if not gemini_api_key:
-        st.error("❌ Please configure your Gemini API key first.")
-        return None
+    fig = go.Figure(data=[
+        go.Pie(labels=list(confidence_counts.keys()), 
+               values=list(confidence_counts.values()),
+               hole=.3)
+    ])
     
-    for attempt in range(max_retries):
-        try:
-            model = get_gemini_model()
-            if not model:
-                return None
-                
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            if attempt < max_retries - 1:
-                st.warning(f"⚠️ Attempt {attempt + 1} failed, retrying...")
-                time.sleep(2)
-            else:
-                st.error(f"❌ All attempts failed: {str(e)}")
-                return None
+    fig.update_layout(
+        title="Evaluation Confidence Distribution",
+        height=300
+    )
     
-    return None
+    return fig
 
-def extract_enhanced_json(text):
-    try:
-        # Try direct parsing first
-        return json.loads(text)
-    except json.JSONDecodeError:
-        try:
-            # Clean the text and try again
-            cleaned_text = re.sub(r'^```json\s*|```\s*', '', text.strip())
-            return json.loads(cleaned_text)
-        except json.JSONDecodeError:
-            try:
-                # Try to find JSON within the text
-                json_match = re.search(r'(\{.*\})', text, re.DOTALL)
-                if json_match:
-                    return json.loads(json_match.group(1))
-                else:
-                    st.error("❌ Could not extract valid JSON from response")
-                    return None
-            except Exception as e:
-                st.error(f"❌ JSON parsing failed: {str(e)}")
-                return None
-
-# Enhanced main functions
-def extract_job_requirements_enhanced(job_desc_text, sensitivity="Balanced"):
-    """Enhanced job requirements extraction"""
-    with st.spinner("🔍 Analyzing job description with AI..."):
-        chunks = textwrap.wrap(job_desc_text, CHUNK_SIZE)
+# Main App Functions
+def extract_job_requirements(job_desc_text):
+    """Extract job requirements from job description text"""
+    with st.spinner("🔍 Extracting job requirements from document..."):
+        chunks = split_text_into_chunks(job_desc_text)
         
-        # Create progress tracking
-        progress_container = st.container()
-        with progress_container:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+        # Progress bar for extraction
+        progress_bar = st.progress(0)
+        st.write(f"⏳ Processing {len(chunks)} text chunks...")
         
         all_requirements = {}
         
@@ -1103,1199 +577,677 @@ def extract_job_requirements_enhanced(job_desc_text, sensitivity="Balanced"):
             # Update progress
             progress = int((i / len(chunks)) * 100)
             progress_bar.progress(progress)
-            status_text.text(f"Processing chunk {i+1} of {len(chunks)}...")
             
-            # Process chunk
-            prompt = build_enhanced_extraction_prompt(chunk, sensitivity)
-            result = query_gemini_with_retry(prompt)
-            
-            if result:
-                json_result = extract_enhanced_json(result)
-                if json_result:
-                    # Merge requirements intelligently
-                    for category, items in json_result.items():
-                        if category not in all_requirements:
-                            all_requirements[category] = items
-                        elif isinstance(items, dict):
-                            all_requirements[category].update(items)
-                        elif isinstance(items, list):
-                            all_requirements[category].extend(items)
+            # Only process every second chunk to speed up and save API calls
+            if i % 2 == 0 or i == len(chunks) - 1:
+                prompt = build_extraction_prompt(chunk)
+                result = query_gemini(prompt)
+                
+                if result:
+                    json_result = extract_valid_json(result)
+                    if json_result:
+                        all_requirements.update(json_result)
         
-        # Complete progress
+        # Complete progress bar
         progress_bar.progress(100)
-        status_text.text("✅ Analysis complete!")
         
         return all_requirements
 
-def evaluate_resume_enhanced(requirements, resume_text, sensitivity="Balanced", analysis_depth="Standard"):
-    """Enhanced resume evaluation with better error handling"""
-    with st.spinner("🧠 Conducting comprehensive resume analysis..."):
-        try:
-            prompt = build_enhanced_evaluation_prompt(requirements, resume_text, sensitivity, analysis_depth)
-            result = query_gemini_with_retry(prompt)
-            
-            if result:
-                json_result = extract_enhanced_json(result)
-                if json_result:
-                    # Validate and clean the result
-                    validated_result = validate_evaluation_result(json_result)
-                    return validated_result
-                else:
-                    st.warning("⚠️ Could not parse AI response. Creating fallback evaluation...")
-                    return create_fallback_evaluation(requirements, resume_text)
-            else:
-                st.warning("⚠️ No response from AI. Creating basic evaluation...")
-                return create_fallback_evaluation(requirements, resume_text)
-                
-        except Exception as e:
-            st.error(f"❌ Error in resume evaluation: {str(e)}")
-            return create_fallback_evaluation(requirements, resume_text)
+def evaluate_resume(requirements, resume_text):
+    """Evaluate resume against job requirements"""
+    with st.spinner("🔍 Analyzing your resume against job requirements..."):
+        prompt = build_evaluation_prompt(requirements, resume_text)
+        result = query_gemini(prompt)
+        
+        if result:
+            return extract_valid_json(result)
+        return None
 
-def validate_evaluation_result(result):
-    """Validate and clean evaluation result"""
-    try:
-        # Ensure required fields exist
-        required_fields = {
-            'overall_match_percentage': 0,
-            'confidence_level': 'medium',
-            'requirements_evaluation': {},
-            'strengths': [],
-            'gaps': [],
-            'red_flags': [],
-            'improvement_suggestions': {'immediate': [], 'medium_term': [], 'long_term': []},
-            'keyword_analysis': {'matched_keywords': [], 'missing_keywords': [], 'keyword_density': 'medium'},
-            'experience_analysis': {'total_years_found': 'Not specified', 'relevant_experience': 'Not specified', 'experience_quality': 'medium', 'progression_evident': False},
-            'ats_compatibility': {'score': 0, 'issues': [], 'recommendations': []},
-            'competitive_assessment': {'market_position': 'average', 'unique_selling_points': [], 'differentiators': []},
-            'summary': 'Analysis completed successfully'
-        }
-        
-        # Fill missing fields
-        for field, default_value in required_fields.items():
-            if field not in result:
-                result[field] = default_value
-        
-        # Ensure scores are numeric
-        result['overall_match_percentage'] = safe_get_score(result, 'overall_match_percentage', 0)
-        
-        if 'ats_compatibility' in result and isinstance(result['ats_compatibility'], dict):
-            result['ats_compatibility']['score'] = safe_get_score(result['ats_compatibility'], 'score', 0)
-        
-        # Validate requirements evaluation structure
-        if 'requirements_evaluation' in result and isinstance(result['requirements_evaluation'], dict):
-            for category, data in result['requirements_evaluation'].items():
-                if isinstance(data, dict):
-                    if 'overall_score' not in data:
-                        data['overall_score'] = 0
-                    data['overall_score'] = safe_get_score(data, 'overall_score', 0)
-                    
-                    if 'detailed_requirements' in data and isinstance(data['detailed_requirements'], dict):
-                        for req_name, req_data in data['detailed_requirements'].items():
-                            if isinstance(req_data, dict):
-                                req_data['match_score'] = safe_get_score(req_data, 'match_score', 0)
-                                if 'meets_requirement' not in req_data:
-                                    req_data['meets_requirement'] = False
-                                if 'evidence_found' not in req_data:
-                                    req_data['evidence_found'] = []
-                                if 'explanation' not in req_data:
-                                    req_data['explanation'] = 'No detailed analysis available'
-                                if 'confidence' not in req_data:
-                                    req_data['confidence'] = 'medium'
-        
+def generate_summary(evaluation):
+    """Generate a concise summary of the evaluation"""
+    prompt = f"""
+You are an expert at summarizing complex information. Please provide a concise, easy-to-understand summary of the following resume evaluation.
+
+RESUME EVALUATION:
+{json.dumps(evaluation, indent=2)}
+
+Your summary should:
+1. Be no more than 3-4 sentences
+2. Clearly state the overall match percentage
+3. Mention the key strengths and gaps
+4. Use simple, direct language
+
+Respond with only the summary text, no additional formatting or explanation.
+"""
+    
+    return query_gemini(prompt)
+
+def generate_optimized_resume(requirements, current_resume, company_info=""):
+    """Generate an optimized resume"""
+    with st.spinner("🔧 Generating optimized resume..."):
+        prompt = build_resume_optimization_prompt(requirements, current_resume, company_info)
+        result = query_gemini(prompt)
         return result
-        
-    except Exception as e:
-        st.warning(f"⚠️ Error validating result: {str(e)}")
+
+def generate_cover_letter(requirements, resume_text, company_info=""):
+    """Generate a cover letter"""
+    with st.spinner("✍️ Generating cover letter..."):
+        prompt = build_cover_letter_prompt(requirements, resume_text, company_info)
+        result = query_gemini(prompt)
         return result
+
+# App Interface
+tabs = st.tabs(["📤 Upload Documents", "📋 Extract Requirements", "📝 Upload Resume", "📊 Results", "🔧 Optimize & Generate"])
 
 # Session state initialization
-for key in ['job_desc_text', 'requirements', 'resume_text', 'evaluation', 'current_step', 'optimized_resume', 'cover_letter']:
-    if key not in st.session_state:
-        st.session_state[key] = None
+if 'job_desc_text' not in st.session_state:
+    st.session_state.job_desc_text = None
+if 'requirements' not in st.session_state:
+    st.session_state.requirements = None
+if 'resume_text' not in st.session_state:
+    st.session_state.resume_text = None
+if 'resume_files' not in st.session_state:
+    st.session_state.resume_files = None
+if 'evaluation' not in st.session_state:
+    st.session_state.evaluation = None
+if 'summary' not in st.session_state:
+    st.session_state.summary = None
+if 'company_info' not in st.session_state:
+    st.session_state.company_info = ""
 
-if 'current_step' not in st.session_state:
-    st.session_state.current_step = 0
-
-# Show progress indicator
-show_progress_indicator(st.session_state.current_step)
-
-# Main application tabs
-tabs = st.tabs([
-    "📤 Job Description", 
-    "📋 Requirements Analysis", 
-    "📝 Resume Upload", 
-    "📊 Comprehensive Results",
-    "🎯 Resume Optimizer",
-    "📈 Analytics Dashboard"
-])
-
-# Tab 1: Enhanced Job Description Upload
+# Tab 1: Upload Documents (Enhanced)
 with tabs[0]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+    st.header("📤 Upload Job Description & Company Info")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("### 📑 Upload Job Description")
-        st.markdown("Support for multiple formats: PDF, DOCX, TXT")
+        st.markdown("""
+        ### 📑 Step 1: Upload job description(s)
         
-        uploaded_file = st.file_uploader(
-            "Choose job description file",
-            type=SUPPORTED_FORMATS,
-            help="Upload the job posting in PDF, DOCX, or TXT format"
-        )
-        
-        # Option to paste text directly
-        st.markdown("**Or paste job description text:**")
-        pasted_text = st.text_area(
-            "Paste job description here",
-            height=200,
-            placeholder="Copy and paste the job description text here..."
-        )
-    
-    with col2:
-        st.markdown("### 🎯 Best Practices")
-        st.info("""
-        **For optimal results:**
-        - Use the original job posting
-        - Ensure text is clear and readable
-        - Include complete job description
-        - Check for any formatting issues
+        Upload one or more job posting PDFs to analyze the requirements.
         """)
         
-        if uploaded_file or pasted_text:
-            st.success("✅ Job description ready for processing!")
+        uploaded_files = st.file_uploader(
+            "Choose Job Description PDF file(s)", 
+            type="pdf", 
+            accept_multiple_files=True,
+            help="Upload one or more job description PDFs to extract requirements"
+        )
+        
+        # Company information input
+        st.markdown("### 🏢 Company Information (Optional)")
+        company_info = st.text_area(
+            "Enter company information, culture, values, or any additional context",
+            height=150,
+            placeholder="e.g., Company mission, values, culture, recent news, or any specific information about the organization..."
+        )
+        
+        if company_info:
+            st.session_state.company_info = company_info
     
-    if uploaded_file or pasted_text:
-        if st.button("🚀 Process Job Description", type="primary", use_container_width=True):
-            with st.spinner("⏳ Extracting and analyzing job description..."):
-                if uploaded_file:
-                    job_desc_text = extract_text_from_file(uploaded_file)
+    with col2:
+        st.markdown("### 🔍 Why This Matters")
+        st.info("Multiple job descriptions help us get a comprehensive view of requirements! Company info helps personalize your documents! 🎯")
+        
+        if uploaded_files:
+            st.markdown("### 📄 Uploaded Files")
+            for file in uploaded_files:
+                st.write(f"✅ {file.name}")
+    
+    if uploaded_files:
+        if st.button("🔍 Extract Text from PDFs", type="primary"):
+            with st.spinner("⏳ Extracting text from PDFs..."):
+                if len(uploaded_files) == 1:
+                    job_desc_text = extract_text_from_pdf(uploaded_files[0])
                 else:
-                    job_desc_text = pasted_text
+                    job_desc_text, file_texts = extract_text_from_multiple_pdfs(uploaded_files)
+                    
+                    # Show breakdown by file
+                    with st.expander("📁 View text breakdown by file"):
+                        for filename, text in file_texts.items():
+                            st.markdown(f"**{filename}:**")
+                            st.text_area(f"Content from {filename}", text[:1000] + "...", height=200, key=f"preview_{filename}")
                 
                 if job_desc_text:
                     st.session_state.job_desc_text = job_desc_text
-                    st.session_state.current_step = 1
-                    st.success("✅ Job description processed successfully!")
+                    st.success(f"✅ Successfully extracted text from {len(uploaded_files)} file(s)!")
                     
-                    # Show preview with word count and key stats
-                    with st.expander("📊 Job Description Analysis"):
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            word_count = len(job_desc_text.split())
-                            st.metric("Word Count", word_count)
-                        with col2:
-                            char_count = len(job_desc_text)
-                            st.metric("Characters", char_count)
-                        with col3:
-                            sentences = len([s for s in job_desc_text.split('.') if s.strip()])
-                            st.metric("Sentences", sentences)
-                        
-                        st.text_area("Preview:", job_desc_text[:1000] + "..." if len(job_desc_text) > 1000 else job_desc_text, height=200)
+                    # Preview in a collapsed section
+                    with st.expander("👀 View combined extracted text preview"):
+                        st.text_area("Combined Job Description Preview", job_desc_text[:2000] + "...", height=300)
                     
-                    st.info("👉 Proceed to 'Requirements Analysis' tab")
+                    st.info("👉 Proceed to the '📋 Extract Requirements' tab to continue.")
                 else:
-                    st.error("❌ Failed to extract text from the file")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+                    st.error("❌ Failed to extract text from the PDF(s).")
 
-# Tab 2: Enhanced Requirements Analysis
+# Tab 2: Extract Requirements (Same as before)
 with tabs[1]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+    st.header("📋 Extract Job Requirements")
     
     if st.session_state.job_desc_text is None:
-        st.info("📤 Please upload and process a job description first")
+        st.info("🔍 Please upload job description PDF(s) in the '📤 Upload Documents' tab first.")
     else:
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.markdown("### 🧠 AI-Powered Requirements Extraction")
-            st.markdown("Advanced analysis with customizable sensitivity levels")
+            st.markdown("""
+            ### 🧐 Step 2: Extract job requirements
             
-            if st.button("🔍 Extract Requirements", type="primary", use_container_width=True):
-                requirements = extract_job_requirements_enhanced(
-                    st.session_state.job_desc_text, 
-                    sensitivity
-                )
-                
-                if requirements:
-                    st.session_state.requirements = requirements
-                    st.session_state.current_step = 2
-                    st.success(f"✅ Successfully extracted requirements from {len(requirements)} categories!")
-                    
-                    # Enhanced requirements display
-                    st.markdown("### 📋 Extracted Requirements")
-                    
-                    # Create tabs for different requirement categories
-                    if requirements:
-                        req_categories = list(requirements.keys())
-                        req_tabs = st.tabs([cat.replace('_', ' ').title() for cat in req_categories])
-                        
-                        category_icons = {
-                            'technical_skills': '💻',
-                            'experience_requirements': '⏱️',
-                            'education_requirements': '🎓',
-                            'certifications': '📜',
-                            'soft_skills': '🤝',
-                            'additional_requirements': '➕'
-                        }
-                        
-                        for i, (category, req_tab) in enumerate(zip(req_categories, req_tabs)):
-                            with req_tab:
-                                icon = category_icons.get(category, '📌')
-                                st.markdown(f"### {icon} {category.replace('_', ' ').title()}")
-                                
-                                if isinstance(requirements[category], dict):
-                                    for subcategory, items in requirements[category].items():
-                                        st.markdown(f"**{subcategory.replace('_', ' ').title()}:**")
-                                        if isinstance(items, list):
-                                            for item in items:
-                                                st.markdown(f"• {item}")
-                                        else:
-                                            st.markdown(f"• {items}")
-                                elif isinstance(requirements[category], list):
-                                    for item in requirements[category]:
-                                        st.markdown(f"• {item}")
-                                else:
-                                    st.markdown(f"• {requirements[category]}")
-                    
-                    st.info("👉 Proceed to 'Resume Upload' tab")
-                else:
-                    st.error("❌ Failed to extract requirements")
-        
-        with col2:
-            st.markdown("### ⚙️ Analysis Settings")
-            st.info(f"""
-            **Current Settings:**
-            - Sensitivity: {sensitivity}
-            - Analysis Depth: {analysis_depth}
-            - Suggestions: {'Enabled' if include_suggestions else 'Disabled'}
+            Let AI analyze the job description to identify key requirements.
             """)
             
-            if st.session_state.requirements:
-                st.markdown("### 📊 Quick Stats")
-                total_reqs = sum(len(reqs) if isinstance(reqs, (list, dict)) else 1 
-                               for reqs in st.session_state.requirements.values())
-                st.metric("Total Requirements", total_reqs)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+            if st.button("🔍 Extract Job Requirements", type="primary"):
+                requirements = extract_job_requirements(st.session_state.job_desc_text)
+                if requirements:
+                    st.session_state.requirements = requirements
+                    st.success(f"✅ Successfully extracted {len(requirements)} job requirements!")
+                    
+                    # Display requirements in a nice format with emojis
+                    st.markdown("### 📋 Extracted Job Requirements")
+                    
+                    req_categories = {
+                        'experience': '⏱️',
+                        'skill': '🛠️',
+                        'education': '🎓',
+                        'certification': '📜',
+                        'technical': '💻',
+                        'soft': '🤝',
+                        'language': '🗣️',
+                        'knowledge': '🧠',
+                        'qualification': '🏆',
+                        'degree': '📚'
+                    }
+                    
+                    for req, description in requirements.items():
+                        # Assign emoji based on requirement category
+                        emoji = '📌'  # default
+                        for category, cat_emoji in req_categories.items():
+                            if category in req.lower():
+                                emoji = cat_emoji
+                                break
+                                
+                        with st.expander(f"{emoji} {req.replace('_', ' ').title()}"):
+                            st.write(description)
+                    
+                    st.info("👉 Proceed to the '📝 Upload Resume' tab to check your match!")
+                else:
+                    st.error("❌ Failed to extract job requirements from the document.")
+        
+        with col2:
+            st.markdown("### 🧩 What's Happening")
+            st.info("Our AI is analyzing the job posting to identify specific skills, qualifications, and experience needed! 🔍")
 
-# Tab 3: Enhanced Resume Upload
+# Tab 3: Upload Resume (Enhanced for multiple files)
 with tabs[2]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+    st.header("📝 Upload Your Resume(s)")
     
     if st.session_state.requirements is None:
-        st.info("📋 Please extract job requirements first")
+        st.info("📋 Please extract job requirements in the '📋 Extract Requirements' tab first.")
     else:
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.markdown("### 📄 Upload Your Resume")
-            st.markdown("Multiple format support with intelligent parsing")
+            st.markdown("""
+            ### 📄 Step 3: Upload your resume(s)
             
-            resume_file = st.file_uploader(
-                "Choose your resume file",
-                type=SUPPORTED_FORMATS,
-                help="Upload your resume in PDF, DOCX, or TXT format"
+            Upload one or more versions of your resume to check how well they match the job requirements.
+            """)
+            
+            resume_files = st.file_uploader(
+                "Choose your Resume PDF file(s)", 
+                type="pdf",
+                accept_multiple_files=True,
+                help="Upload one or more resume versions to evaluate against the job requirements"
             )
             
-            # Option to paste resume text
-            st.markdown("**Or paste your resume text:**")
-            pasted_resume = st.text_area(
-                "Paste resume text here",
-                height=200,
-                placeholder="Copy and paste your resume content here..."
-            )
-            
-            if resume_file or pasted_resume:
-                if st.button("🔍 Analyze Resume", type="primary", use_container_width=True):
-                    with st.spinner("⏳ Processing and analyzing your resume..."):
-                        if resume_file:
-                            resume_text = extract_text_from_file(resume_file)
+            if resume_files:
+                st.session_state.resume_files = resume_files
+                
+                if st.button("🔍 Process Resume(s)", type="primary"):
+                    with st.spinner("⏳ Processing your resume(s)..."):
+                        if len(resume_files) == 1:
+                            resume_text = extract_text_from_pdf(resume_files[0])
                         else:
-                            resume_text = pasted_resume
+                            resume_text, file_texts = extract_text_from_multiple_pdfs(resume_files)
+                            
+                            # Show breakdown by file
+                            with st.expander("📁 View resume breakdown by file"):
+                                for filename, text in file_texts.items():
+                                    st.markdown(f"**{filename}:**")
+                                    st.text_area(f"Content from {filename}", text[:1000] + "...", height=200, key=f"resume_preview_{filename}")
                         
                         if resume_text:
                             st.session_state.resume_text = resume_text
                             
-                            # Show resume stats
-                            with st.expander("📊 Resume Analysis"):
-                                col1, col2, col3, col4 = st.columns(4)
-                                with col1:
-                                    word_count = len(resume_text.split())
-                                    st.metric("Words", word_count)
-                                with col2:
-                                    char_count = len(resume_text)
-                                    st.metric("Characters", char_count)
-                                with col3:
-                                    # Estimate reading time
-                                    reading_time = max(1, word_count // 200)
-                                    st.metric("Reading Time", f"{reading_time} min")
-                                with col4:
-                                    # Count potential keywords
-                                    keywords = len(set(word.lower() for word in resume_text.split() 
-                                                     if len(word) > 3 and word.isalpha()))
-                                    st.metric("Unique Keywords", keywords)
-                                
-                                st.text_area("Resume Preview:", resume_text[:1000] + "..." if len(resume_text) > 1000 else resume_text, height=200)
+                            # Preview in a collapsed section
+                            with st.expander("👀 View combined resume text preview"):
+                                st.text_area("Resume Preview", resume_text[:1000] + "...", height=200)
+                            
+                            # Proceed to evaluation
+                            st.success(f"✅ Resume(s) processed successfully!")
                             
                             # Automatic evaluation
-                            st.markdown("### 🧠 Conducting Analysis...")
-                            evaluation = evaluate_resume_enhanced(
-                                st.session_state.requirements,
-                                resume_text,
-                                sensitivity,
-                                analysis_depth
-                            )
-                            
-                            if evaluation:
-                                st.session_state.evaluation = evaluation
-                                st.session_state.current_step = 3
-                                st.success("✅ Resume analysis completed!")
-                                st.info("👉 View detailed results in 'Comprehensive Results' tab")
-                            else:
-                                st.error("❌ Failed to analyze resume")
+                            st.markdown("### 🔍 Evaluating Your Resume(s)")
+                            with st.spinner("⏳ Comparing your resume(s) to job requirements..."):
+                                evaluation = evaluate_resume(st.session_state.requirements, resume_text)
+                                if evaluation:
+                                    st.session_state.evaluation = evaluation
+                                    summary = generate_summary(evaluation)
+                                    st.session_state.summary = summary
+                                    
+                                    st.success("✅ Resume evaluation completed!")
+                                    st.info("👉 Proceed to the '📊 Results' tab to view your match results!")
+                                else:
+                                    st.error("❌ Failed to evaluate your resume.")
                         else:
-                            st.error("❌ Failed to extract text from resume")
+                            st.error("❌ Failed to extract text from your resume(s).")
         
         with col2:
-            st.markdown("### 🎯 Resume Tips")
-            st.info("""
-            **Optimization Tips:**
-            - Use keywords from job description
-            - Quantify achievements
-            - Include relevant skills
-            - Keep format clean and ATS-friendly
-            - Update for each application
+            st.markdown("### 📊 What We're Looking For")
+            st.info("We'll compare your resume(s) against the extracted job requirements and provide a detailed match analysis! 🔍")
+            
+            # Add tips for better resume matching
+            st.markdown("### 💡 Resume Tips")
+            st.markdown("""
+            - Use relevant keywords from the job description
+            - Quantify your achievements when possible
+            - Focus on skills mentioned in the job posting
+            - Update your resume for each application
             """)
             
-            if st.session_state.resume_text:
-                st.success("✅ Resume uploaded successfully!")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+            if resume_files:
+                st.markdown("### 📄 Uploaded Resume Files")
+                for file in resume_files:
+                    st.write(f"✅ {file.name}")
 
-# Tab 4: Comprehensive Results
+# Tab 4: Results (Enhanced with more visualizations)
 with tabs[3]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+    st.header("📊 Match Results & Analytics")
     
     if st.session_state.evaluation is None:
-        st.info("📝 Please complete the resume analysis first")
+        st.info("📝 Please complete the resume evaluation in the '📝 Upload Resume' tab first.")
     else:
         evaluation = st.session_state.evaluation
-        overall_score = safe_get_score(evaluation, 'overall_match_percentage', 0)
         
-        # Enhanced score display
-        col1, col2, col3 = st.columns([1, 2, 1])
+        # Main metrics row
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            # Match score gauge
+            match_score = evaluation.get('overall_match_percentage', 0)
+            fig_gauge = create_match_score_gauge(match_score)
+            st.plotly_chart(fig_gauge, use_container_width=True)
         
         with col2:
-            st.markdown(f"""
-            <div class="score-display">
-                <h2 style="margin: 0; color: white;">Overall Match Score</h2>
-                <div class="score-number">{overall_score}%</div>
-                <p style="margin: 0; font-size: 1.2rem;">
-                    {'🌟 Excellent Match!' if overall_score >= 85 else 
-                     '🎯 Strong Match!' if overall_score >= 70 else 
-                     '👍 Good Match!' if overall_score >= 55 else 
-                     '🔧 Needs Improvement'}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            # Skills gap analysis
+            fig_gap = create_skills_gap_analysis(evaluation)
+            st.plotly_chart(fig_gap, use_container_width=True)
         
-        # Key metrics dashboard
-        st.markdown("### 📊 Key Metrics")
-        metric_cols = st.columns(4)
+        with col3:
+            # Confidence distribution
+            fig_confidence = create_confidence_distribution(evaluation['requirements_evaluation'])
+            st.plotly_chart(fig_confidence, use_container_width=True)
         
-        with metric_cols[0]:
-            confidence = evaluation.get('confidence_level', 'medium').title()
-            st.metric("Analysis Confidence", confidence)
+        # Summary section
+        if st.session_state.summary:
+            st.markdown("### 📝 Executive Summary")
+            st.info(st.session_state.summary)
         
-        with metric_cols[1]:
-            if 'requirements_evaluation' in evaluation:
-                met_reqs = sum(1 for req_data in evaluation['requirements_evaluation'].values()
-                              if isinstance(req_data, dict) and 
-                              any(sub_req.get('meets_requirement', False) 
-                                  for sub_req in req_data.get('detailed_requirements', {}).values()
-                                  if isinstance(sub_req, dict)))
-                total_reqs = len(evaluation['requirements_evaluation'])
-                st.metric("Requirements Met", f"{met_reqs}/{total_reqs}")
+        # Detailed visualizations
+        col1, col2 = st.columns(2)
         
-        with metric_cols[2]:
-            ats_score = safe_get_score(evaluation.get('ats_compatibility', {}), 'score', 0)
-            st.metric("ATS Compatibility", f"{ats_score}%")
+        with col1:
+            # Requirements radar chart
+            fig_radar = create_requirements_radar_chart(evaluation['requirements_evaluation'])
+            st.plotly_chart(fig_radar, use_container_width=True)
         
-        with metric_cols[3]:
-            exp_analysis = evaluation.get('experience_analysis', {})
-            relevant_exp = exp_analysis.get('relevant_experience', 'N/A')
-            st.metric("Relevant Experience", relevant_exp)
+        with col2:
+            # Requirements bar chart
+            fig_bar = create_requirements_bar_chart(evaluation['requirements_evaluation'])
+            st.plotly_chart(fig_bar, use_container_width=True)
         
-        # Interactive visualizations
-        st.markdown("### 📈 Visual Analysis")
+        # Strengths and gaps analysis
+        col_strengths, col_gaps = st.columns(2)
         
-        viz_cols = st.columns(2)
-        
-        with viz_cols[0]:
-            # Gauge chart for overall score
-            gauge_fig = create_score_gauge(overall_score)
-            st.plotly_chart(gauge_fig, use_container_width=True)
-        
-        with viz_cols[1]:
-            # Requirements breakdown chart
-            match_fig = create_match_visualization(evaluation)
-            if match_fig:
-                st.plotly_chart(match_fig, use_container_width=True)
-        
-        # Detailed analysis sections
-        analysis_tabs = st.tabs([
-            "🎯 Strengths & Gaps", 
-            "📋 Detailed Requirements", 
-            "🔍 Keyword Analysis",
-            "📊 Competitive Assessment"
-        ])
-        
-        with analysis_tabs[0]:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### 💪 Key Strengths")
-                strengths = evaluation.get('strengths', [])
-                for strength in strengths:
-                    st.markdown(f"✅ {strength}")
-            
-            with col2:
-                st.markdown("### 🎯 Areas for Improvement")
-                gaps = evaluation.get('gaps', [])
-                for gap in gaps:
-                    st.markdown(f"⚠️ {gap}")
-            
-            # Red flags section
-            red_flags = evaluation.get('red_flags', [])
-            if red_flags:
-                st.markdown("### 🚨 Red Flags")
-                for flag in red_flags:
-                    st.error(f"🚨 {flag}")
-        
-        with analysis_tabs[1]:
-            st.markdown("### 📋 Detailed Requirements Analysis")
-            
-            if 'requirements_evaluation' in evaluation:
-                for category, category_data in evaluation['requirements_evaluation'].items():
-                    with st.expander(f"📂 {category.replace('_', ' ').title()}"):
-                        if isinstance(category_data, dict) and 'detailed_requirements' in category_data:
-                            overall_score = safe_get_score(category_data, 'overall_score', 0)
-                            st.metric(f"{category.title()} Score", f"{overall_score}%")
-                            
-                            for req_name, req_data in category_data['detailed_requirements'].items():
-                                if isinstance(req_data, dict):
-                                    score = safe_get_score(req_data, 'match_score', 0)
-                                    meets = req_data.get('meets_requirement', False)
-                                    
-                                    # Color coding based on score
-                                    if score >= 80:
-                                        badge_class = "badge-excellent"
-                                        icon = "✅"
-                                    elif score >= 50:
-                                        badge_class = "badge-good"
-                                        icon = "⚠️"
-                                    else:
-                                        badge_class = "badge-poor"
-                                        icon = "❌"
-                                    
-                                    st.markdown(f"""
-                                    <div style="margin: 10px 0; padding: 15px; border-radius: 10px; background: {'#f0f9ff' if meets else '#fef2f2'};">
-                                        <h4>{icon} {req_name.replace('_', ' ').title()}</h4>
-                                        <span class="req-badge {badge_class}">{score}% Match</span>
-                                        <p><strong>Evidence:</strong> {', '.join(req_data.get('evidence_found', []))}</p>
-                                        <p><strong>Analysis:</strong> {req_data.get('explanation', 'No explanation available')}</p>
-                                        <p><strong>Confidence:</strong> {req_data.get('confidence', 'N/A').title()}</p>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-        
-        with analysis_tabs[2]:
-            st.markdown("### 🔍 Keyword Analysis")
-            
-            keyword_analysis = evaluation.get('keyword_analysis', {})
-            
-            kw_cols = st.columns(3)
-            
-            with kw_cols[0]:
-                st.markdown("#### ✅ Matched Keywords")
-                matched = keyword_analysis.get('matched_keywords', [])
-                for keyword in matched:
-                    st.markdown(f"• {keyword}")
-            
-            with kw_cols[1]:
-                st.markdown("#### ❌ Missing Keywords")
-                missing = keyword_analysis.get('missing_keywords', [])
-                for keyword in missing:
-                    st.markdown(f"• {keyword}")
-            
-            with kw_cols[2]:
-                density = keyword_analysis.get('keyword_density', 'N/A')
-                st.metric("Keyword Density", density.title())
-        
-        with analysis_tabs[3]:
-            st.markdown("### 📊 Competitive Assessment")
-            
-            competitive = evaluation.get('competitive_assessment', {})
-            
-            comp_cols = st.columns(2)
-            
-            with comp_cols[0]:
-                market_position = competitive.get('market_position', 'N/A')
-                st.metric("Market Position", market_position.title())
+        with col_strengths:
+            st.markdown("### 💪 Key Strengths")
+            strengths = evaluation.get('strengths', [])
+            for i, strength in enumerate(strengths):
+                st.markdown(f"✅ **{i+1}.** {strength}")
                 
-                st.markdown("#### 🌟 Unique Selling Points")
-                usps = competitive.get('unique_selling_points', [])
-                for usp in usps:
-                    st.markdown(f"⭐ {usp}")
+        with col_gaps:
+            st.markdown("### 🔍 Areas for Improvement")
+            gaps = evaluation.get('gaps', [])
+            for i, gap in enumerate(gaps):
+                st.markdown(f"⚠️ **{i+1}.** {gap}")
+        
+        # Improvement suggestions
+        st.markdown("### 🚀 Actionable Improvement Suggestions")
+        suggestions = evaluation.get('improvement_suggestions', [])
+        for i, suggestion in enumerate(suggestions):
+            st.markdown(f"💡 **Suggestion {i+1}**: {suggestion}")
+        
+        # Detailed evaluation for each requirement
+        st.markdown("### 📊 Detailed Requirements Analysis")
+        
+        requirements_data = []
+        for req, result in evaluation['requirements_evaluation'].items():
+            match_score = result.get("match_score", 0)
+            score_emoji = "✅" if match_score >= 80 else "⚠️" if match_score >= 50 else "❌"
             
-            with comp_cols[1]:
-                st.markdown("#### 🔥 Key Differentiators")
-                differentiators = competitive.get('differentiators', [])
-                for diff in differentiators:
-                    st.markdown(f"🔥 {diff}")
+            requirements_data.append({
+                "Requirement": req.replace('_', ' ').title(),
+                "Match": f"{score_emoji} {match_score}%",
+                "Status": "Meets" if result["meets_requirement"] else "Does not meet",
+                "Confidence": result.get("confidence", "N/A").capitalize(),
+                "Details": result["explanation"]
+            })
         
-        # Action items and recommendations
-        st.markdown("### 🚀 Improvement Recommendations")
+        df = pd.DataFrame(requirements_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
         
-        improvements = evaluation.get('improvement_suggestions', {})
-        
-        if isinstance(improvements, dict):
-            rec_tabs = st.tabs(["🏃 Immediate", "📅 Medium-term", "🎯 Long-term"])
+        # Detailed explanation for each requirement
+        st.markdown("### 🔎 Requirement Details")
+        for req, result in evaluation['requirements_evaluation'].items():
+            meets = result["meets_requirement"]
+            match_score = result.get("match_score", 0)
             
-            with rec_tabs[0]:
-                immediate = improvements.get('immediate', [])
-                for i, suggestion in enumerate(immediate, 1):
-                    st.markdown(f"**{i}.** {suggestion}")
+            # Determine color based on match score
+            if match_score >= 80:
+                color = "#15803d"  # green
+                icon = "✅"
+            elif match_score >= 50:
+                color = "#ca8a04"  # yellow
+                icon = "⚠️"
+            else:
+                color = "#b91c1c"  # red
+                icon = "❌"
             
-            with rec_tabs[1]:
-                medium_term = improvements.get('medium_term', [])
-                for i, suggestion in enumerate(medium_term, 1):
-                    st.markdown(f"**{i}.** {suggestion}")
-            
-            with rec_tabs[2]:
-                long_term = improvements.get('long_term', [])
-                for i, suggestion in enumerate(long_term, 1):
-                    st.markdown(f"**{i}.** {suggestion}")
-        else:
-            # Fallback for simple list format
-            for i, suggestion in enumerate(improvements, 1):
-                st.markdown(f"💡 **Recommendation {i}:** {suggestion}")
+            with st.expander(f"{icon} {req.replace('_', ' ').title()} - {match_score}%"):
+                st.markdown(f"**Match Score**: <span style='color:{color};font-weight:bold;'>{match_score}%</span>", unsafe_allow_html=True)
+                st.markdown(f"**Status**: {'Meets requirement ✓' if meets else 'Does not meet requirement ✗'}")
+                st.markdown(f"**Confidence**: {result.get('confidence', 'N/A').capitalize()}")
+                st.markdown(f"**Explanation**: {result['explanation']}")
         
-        # Summary
-        st.markdown("### 📝 Executive Summary")
-        summary = evaluation.get('summary', 'No summary available')
-        st.info(summary)
-        
-        # Download options
-        st.markdown("### 💾 Export Options")
-        
-        download_cols = st.columns(4)
-        
-        with download_cols[0]:
+        # Download results
+        col1, col2, col3 = st.columns(3)
+        with col1:
             if st.download_button(
-                "📊 Download Full Analysis (JSON)",
+                "📊 Download Analysis as JSON",
                 json.dumps(evaluation, indent=2),
-                file_name=f"resume_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                file_name="resume_evaluation.json",
                 mime="application/json"
             ):
-                st.success("✅ Analysis downloaded!")
-        
-        with download_cols[1]:
-            # Create PDF report (simplified text version)
-            pdf_report = f"""RESUME ANALYSIS REPORT
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                st.success("✅ Successfully downloaded evaluation results!")
+                
+        with col2:
+            # Generate a simplified text report
+            report = f"""RESUME MATCH REPORT
+            
+Overall Match Score: {match_score}%
 
-OVERALL MATCH SCORE: {overall_score}%
+STRENGTHS:
+{chr(10).join([f'• {s}' for s in strengths])}
 
-EXECUTIVE SUMMARY:
-{summary}
+AREAS TO IMPROVE:
+{chr(10).join([f'• {g}' for g in gaps])}
 
-KEY STRENGTHS:
-{chr(10).join([f'• {s}' for s in evaluation.get('strengths', [])])}
+IMPROVEMENT SUGGESTIONS:
+{chr(10).join([f'• {s}' for s in suggestions])}
 
-AREAS FOR IMPROVEMENT:
-{chr(10).join([f'• {g}' for g in evaluation.get('gaps', [])])}
-
-IMMEDIATE ACTION ITEMS:
-{chr(10).join([f'• {item}' for item in improvements.get('immediate', []) if isinstance(improvements, dict)])}
-"""
+REQUIREMENTS ANALYSIS:
+{chr(10).join([f'• {req.replace("_", " ").title()}: {result.get("match_score", 0)}% - {"Meets" if result["meets_requirement"] else "Does not meet"}' for req, result in evaluation['requirements_evaluation'].items()])}
+            """
             
             if st.download_button(
-                "📄 Download Report (TXT)",
-                pdf_report,
-                file_name=f"resume_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                "📝 Download Text Report",
+                report,
+                file_name="resume_match_report.txt",
                 mime="text/plain"
             ):
-                st.success("✅ Report downloaded!")
+                st.success("✅ Successfully downloaded text report!")
         
-        with download_cols[2]:
-            # CSV format for easy analysis
-            if 'requirements_evaluation' in evaluation:
-                csv_data = []
-                for category, category_data in evaluation['requirements_evaluation'].items():
-                    if isinstance(category_data, dict) and 'detailed_requirements' in category_data:
-                        for req_name, req_data in category_data['detailed_requirements'].items():
-                            if isinstance(req_data, dict):
-                                csv_data.append({
-                                    'Category': category,
-                                    'Requirement': req_name,
-                                    'Score': safe_get_score(req_data, 'match_score', 0),
-                                    'Meets_Requirement': req_data.get('meets_requirement', False),
-                                    'Confidence': req_data.get('confidence', 'N/A')
-                                })
-                
-                if csv_data:
-                    df = pd.DataFrame(csv_data)
-                    csv_string = df.to_csv(index=False)
-                    
-                    if st.download_button(
-                        "📈 Download Data (CSV)",
-                        csv_string,
-                        file_name=f"resume_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    ):
-                        st.success("✅ Data downloaded!")
-        
-        with download_cols[3]:
-            if st.button("🔄 Restart Analysis"):
-                for key in ['job_desc_text', 'requirements', 'resume_text', 'evaluation']:
-                    st.session_state[key] = None
-                st.session_state.current_step = 0
-                st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Tab 5: Resume Optimizer
-with tabs[4]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
-    st.markdown("### 🎯 AI Resume Optimizer")
-    
-    if st.session_state.evaluation is None:
-        st.info("📊 Complete the analysis first to access optimization features")
-    else:
-        st.markdown("#### 🚀 Optimization Tools")
-        
-        opt_cols = st.columns(2)
-        
-        with opt_cols[0]:
-            if st.button("🔧 Generate Optimized Resume", type="primary", use_container_width=True):
-                with st.spinner("🧠 Creating optimized resume version..."):
-                    # Get missing keywords from evaluation
-                    keyword_analysis = st.session_state.evaluation.get('keyword_analysis', {})
-                    missing_keywords = keyword_analysis.get('missing_keywords', [])
-                    
-                    # Generate optimized resume
-                    optimized_data = generate_optimized_resume(
-                        st.session_state.resume_text,
-                        st.session_state.requirements,
-                        missing_keywords
-                    )
-                    
-                    if optimized_data:
-                        st.session_state.optimized_resume = optimized_data
-                        st.success("✅ Optimized resume generated!")
-                        
-                        # Display optimized resume
-                        st.markdown("### 📝 Optimized Resume")
-                        
-                        # Show improvements summary
-                        if 'improvements_summary' in optimized_data:
-                            with st.expander("🔍 Key Improvements Made"):
-                                st.markdown(optimized_data['improvements_summary'])
-                        
-                        # Show enhanced sections
-                        if 'enhanced_sections' in optimized_data:
-                            with st.expander("📈 Enhanced Sections"):
-                                enhanced_sections = optimized_data['enhanced_sections']
-                                if isinstance(enhanced_sections, list):
-                                    for section in enhanced_sections:
-                                        st.markdown(f"• {section}")
-                                else:
-                                    st.markdown(enhanced_sections)
-                        
-                        # Display the optimized resume
-                        optimized_resume_text = optimized_data.get('optimized_resume', 'No optimized resume generated')
-                        st.text_area(
-                            "Optimized Resume Content:",
-                            optimized_resume_text,
-                            height=400
-                        )
-                        
-                        # Download option
-                        st.download_button(
-                            "💾 Download Optimized Resume",
-                            optimized_resume_text,
-                            file_name=f"optimized_resume_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain"
-                        )
-                    else:
-                        st.error("❌ Failed to generate optimized resume. Please try again.")
-        
-        with opt_cols[1]:
-            if st.button("📝 Generate Cover Letter", type="primary", use_container_width=True):
-                with st.spinner("✍️ Creating personalized cover letter..."):
-                    # Generate cover letter
-                    cover_letter_data = generate_cover_letter(
-                        st.session_state.resume_text,
-                        st.session_state.requirements
-                    )
-                    
-                    if cover_letter_data:
-                        st.session_state.cover_letter = cover_letter_data
-                        st.success("✅ Cover letter generated!")
-                        
-                        # Display cover letter
-                        st.markdown("### 💌 Personalized Cover Letter")
-                        
-                        # Show key highlights
-                        if 'key_highlights' in cover_letter_data:
-                            with st.expander("⭐ Key Highlights"):
-                                highlights = cover_letter_data['key_highlights']
-                                if isinstance(highlights, list):
-                                    for highlight in highlights:
-                                        st.markdown(f"• {highlight}")
-                                else:
-                                    st.markdown(highlights)
-                        
-                        # Show personalization notes
-                        if 'personalization_notes' in cover_letter_data:
-                            with st.expander("🎯 Personalization Notes"):
-                                st.markdown(cover_letter_data['personalization_notes'])
-                        
-                        # Display the cover letter
-                        cover_letter_text = cover_letter_data.get('cover_letter', 'No cover letter generated')
-                        st.text_area(
-                            "Cover Letter Content:",
-                            cover_letter_text,
-                            height=400
-                        )
-                        
-                        # Download option
-                        st.download_button(
-                            "💾 Download Cover Letter",
-                            cover_letter_text,
-                            file_name=f"cover_letter_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain"
-                        )
-                    else:
-                        st.error("❌ Failed to generate cover letter. Please try again.")
-        
-        # Show existing optimized content if available
-        if st.session_state.optimized_resume:
-            st.markdown("### 📋 Previously Generated Content")
-            
-            content_tabs = st.tabs(["📝 Optimized Resume", "💌 Cover Letter"])
-            
-            with content_tabs[0]:
-                if st.session_state.optimized_resume:
-                    st.text_area(
-                        "Your Optimized Resume:",
-                        st.session_state.optimized_resume.get('optimized_resume', ''),
-                        height=300
-                    )
-            
-            with content_tabs[1]:
-                if st.session_state.cover_letter:
-                    st.text_area(
-                        "Your Cover Letter:",
-                        st.session_state.cover_letter.get('cover_letter', ''),
-                        height=300
-                    )
-        
-        # Keyword optimization suggestions
-        st.markdown("#### 🔍 Smart Keyword Optimization")
-        
-        if 'keyword_analysis' in st.session_state.evaluation:
-            keyword_data = st.session_state.evaluation['keyword_analysis']
-            
-            keyword_cols = st.columns(2)
-            
-            with keyword_cols[0]:
-                st.markdown("##### ✅ Keywords Found")
-                matched_keywords = keyword_data.get('matched_keywords', [])
-                if matched_keywords:
-                    for keyword in matched_keywords[:10]:  # Show first 10
-                        st.markdown(f"• `{keyword}`")
-                else:
-                    st.info("No matched keywords found")
-            
-            with keyword_cols[1]:
-                st.markdown("##### ❌ Missing Keywords")
-                missing_keywords = keyword_data.get('missing_keywords', [])
-                if missing_keywords:
-                    st.info("💡 Consider adding these keywords to your resume:")
-                    for keyword in missing_keywords[:10]:  # Show first 10
-                        st.markdown(f"• `{keyword}`")
-                else:
-                    st.success("All important keywords are present!")
-        
-        # Skills gap analysis
-        st.markdown("#### 📈 Skills Development Roadmap")
-        
-        gaps = st.session_state.evaluation.get('gaps', [])
-        if gaps:
-            st.markdown("**Priority skills to develop:**")
-            
-            # Create a more detailed skills development plan
-            skills_cols = st.columns(3)
-            
-            with skills_cols[0]:
-                st.markdown("##### 🏃 Immediate (1-3 months)")
-                immediate_skills = gaps[:3] if len(gaps) >= 3 else gaps
-                for i, gap in enumerate(immediate_skills, 1):
-                    st.markdown(f"{i}. {gap}")
-            
-            with skills_cols[1]:
-                st.markdown("##### 📅 Medium-term (3-6 months)")
-                medium_skills = gaps[3:6] if len(gaps) > 3 else []
-                for i, gap in enumerate(medium_skills, 1):
-                    st.markdown(f"{i}. {gap}")
-            
-            with skills_cols[2]:
-                st.markdown("##### 🎯 Long-term (6+ months)")
-                long_skills = gaps[6:] if len(gaps) > 6 else []
-                for i, gap in enumerate(long_skills, 1):
-                    st.markdown(f"{i}. {gap}")
-        
-        # ATS Optimization Tips
-        st.markdown("#### 🤖 ATS Optimization Tips")
-        
-        ats_data = st.session_state.evaluation.get('ats_compatibility', {})
-        ats_score = safe_get_score(ats_data, 'score', 0)
-        
-        if ats_score < 80:
-            st.warning("⚠️ Your resume may not be fully ATS-optimized")
-            
-            ats_issues = ats_data.get('issues', [])
-            ats_recommendations = ats_data.get('recommendations', [])
-            
-            if ats_issues:
-                st.markdown("**Issues Found:**")
-                for issue in ats_issues:
-                    st.markdown(f"• {issue}")
-            
-            if ats_recommendations:
-                st.markdown("**Recommendations:**")
-                for rec in ats_recommendations:
-                    st.markdown(f"• {rec}")
-        else:
-            st.success("✅ Your resume appears to be ATS-friendly!")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Tab 6: Analytics Dashboard
-with tabs[5]:
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
-    st.markdown("### 📈 Advanced Analytics Dashboard")
-    
-    if st.session_state.evaluation is None:
-        st.info("📊 Complete the analysis first to view analytics")
-    else:
-        # Extract job title for market analysis
-        job_title = "Software Engineer"  # Default, could be extracted from job description
-        if st.session_state.job_desc_text:
-            # Simple job title extraction (could be improved with NLP)
-            text_words = st.session_state.job_desc_text.lower().split()
-            if any(word in text_words for word in ["engineer", "developer", "programmer"]):
-                job_title = "Software Engineer"
-            elif any(word in text_words for word in ["analyst", "data"]):
-                job_title = "Data Analyst"
-            elif any(word in text_words for word in ["manager", "lead"]):
-                job_title = "Manager"
-        
-        # Market Analytics Section
-        st.markdown("#### 🌍 Market Intelligence")
-        
-        market_cols = st.columns(3)
-        
-        with market_cols[0]:
-            st.markdown("##### 💼 Job Market Trends")
-            with st.spinner("Fetching market data..."):
-                market_data = get_job_market_data(job_title)
-                if market_data and 'results' in market_data:
-                    total_jobs = market_data.get('count', 0)
-                    st.metric("Available Positions", f"{total_jobs:,}")
-                    
-                    # Show top locations
-                    if market_data['results']:
-                        locations = {}
-                        for job in market_data['results'][:10]:
-                            location = job.get('location', {}).get('display_name', 'Unknown')
-                            locations[location] = locations.get(location, 0) + 1
-                        
-                        st.markdown("**Top Locations:**")
-                        for loc, count in sorted(locations.items(), key=lambda x: x[1], reverse=True)[:5]:
-                            st.markdown(f"• {loc}: {count} jobs")
-                else:
-                    st.metric("Available Positions", "N/A")
-                    st.info("Market data temporarily unavailable")
-        
-        with market_cols[1]:
-            st.markdown("##### 💰 Salary Insights")
-            with st.spinner("Fetching salary data..."):
-                salary_data = get_salary_insights(job_title)
-                if salary_data:
-                    # This would be implemented based on the actual API response structure
-                    st.metric("Average Salary", "$75,000")
-                    st.metric("Salary Range", "$60K - $120K")
-                else:
-                    st.metric("Average Salary", "N/A")
-                    st.info("Salary data temporarily unavailable")
-        
-        with market_cols[2]:
-            st.markdown("##### 📊 Market Position")
-            competitive_assessment = st.session_state.evaluation.get('competitive_assessment', {})
-            market_position = competitive_assessment.get('market_position', 'average').title()
-            st.metric("Your Position", market_position)
-            
-            # Color code based on position
-            if market_position.lower() == 'strong':
-                st.success("🔥 You're competitive!")
-            elif market_position.lower() == 'average':
-                st.warning("⚡ Room for improvement")
-            else:
-                st.error("💪 Needs significant work")
-        
-        # Skills Analysis Dashboard
-        st.markdown("#### 🎯 Comprehensive Skills Analysis")
-        
-        # Create radar chart for skills
-        if 'requirements_evaluation' in st.session_state.evaluation:
-            radar_fig = create_skills_radar_chart(st.session_state.evaluation)
-            if radar_fig:
-                st.plotly_chart(radar_fig, use_container_width=True)
-        
-        # Skills breakdown
-        skills_analysis_cols = st.columns(2)
-        
-        with skills_analysis_cols[0]:
-            st.markdown("##### 💻 Technical Skills Breakdown")
-            
-            # Create a detailed technical skills chart
-            tech_requirements = st.session_state.requirements.get('technical_skills', {})
-            if tech_requirements:
-                skills_data = []
-                
-                for category, skills_list in tech_requirements.items():
-                    if isinstance(skills_list, list):
-                        for skill in skills_list:
-                            # Check if skill is mentioned in resume
-                            resume_text_lower = st.session_state.resume_text.lower()
-                            skill_present = skill.lower() in resume_text_lower
-                            skills_data.append({
-                                'Skill': skill,
-                                'Category': category.replace('_', ' ').title(),
-                                'Present': 'Yes' if skill_present else 'No',
-                                'Score': 85 if skill_present else 0
-                            })
-                
-                if skills_data:
-                    df_skills = pd.DataFrame(skills_data)
-                    
-                    # Create a bar chart
-                    fig_skills = px.bar(
-                        df_skills, 
-                        x='Skill', 
-                        y='Score',
-                        color='Present',
-                        facet_col='Category',
-                        title="Technical Skills Assessment"
-                    )
-                    fig_skills.update_layout(height=400)
-                    st.plotly_chart(fig_skills, use_container_width=True)
-        
-        with skills_analysis_cols[1]:
-            st.markdown("##### 🤝 Soft Skills Analysis")
-            
-            soft_skills = st.session_state.requirements.get('soft_skills', [])
-            if soft_skills:
-                soft_skills_data = []
-                resume_text_lower = st.session_state.resume_text.lower()
-                
-                for skill in soft_skills:
-                    # Simple keyword matching for soft skills
-                    skill_keywords = skill.lower().split()
-                    skill_present = any(keyword in resume_text_lower for keyword in skill_keywords)
-                    
-                    soft_skills_data.append({
-                        'Skill': skill,
-                        'Present': skill_present,
-                        'Score': 80 if skill_present else 20
-                    })
-                
-                df_soft = pd.DataFrame(soft_skills_data)
-                
-                # Create a horizontal bar chart
-                fig_soft = px.bar(
-                    df_soft,
-                    x='Score',
-                    y='Skill',
-                    orientation='h',
-                    color='Present',
-                    title="Soft Skills Assessment"
-                )
-                fig_soft.update_layout(height=400)
-                st.plotly_chart(fig_soft, use_container_width=True)
-        
-        # Improvement Timeline
-        st.markdown("#### 📅 Career Development Timeline")
-        
-        timeline_fig = create_improvement_timeline(st.session_state.evaluation)
-        if timeline_fig:
-            st.plotly_chart(timeline_fig, use_container_width=True)
-        else:
-            st.info("💡 Complete your analysis to see personalized development timeline")
-        
-        # Competitive Analysis
-        st.markdown("#### 🏆 Competitive Intelligence")
-        
-        comp_cols = st.columns(3)
-        
-        with comp_cols[0]:
-            st.markdown("##### 🎯 Your Unique Value")
-            competitive = st.session_state.evaluation.get('competitive_assessment', {})
-            usps = competitive.get('unique_selling_points', [])
-            
-            if usps:
-                for i, usp in enumerate(usps, 1):
-                    st.markdown(f"**{i}.** {usp}")
-            else:
-                st.info("Develop unique selling points to stand out")
-        
-        with comp_cols[1]:
-            st.markdown("##### 🚀 Key Differentiators")
-            differentiators = competitive.get('differentiators', [])
-            
-            if differentiators:
-                for i, diff in enumerate(differentiators, 1):
-                    st.markdown(f"**{i}.** {diff}")
-            else:
-                st.info("Build differentiators to compete effectively")
-        
-        with comp_cols[2]:
-            st.markdown("##### 📈 Growth Opportunities")
-            
-            # Calculate growth potential based on gaps and current score
-            overall_score = safe_get_score(st.session_state.evaluation, 'overall_match_percentage', 0)
-            gaps_count = len(st.session_state.evaluation.get('gaps', []))
-            
-            if overall_score >= 80:
-                growth_potential = "High - Fine-tuning needed"
-            elif overall_score >= 60:
-                growth_potential = "Medium - Targeted improvements"
-            else:
-                growth_potential = "High - Significant opportunities"
-            
-            st.metric("Growth Potential", growth_potential)
-            st.metric("Skills to Develop", gaps_count)
-        
-        # Performance Tracking (Simulated - would be real with user accounts)
-        st.markdown("#### 📊 Performance Tracking")
-        
-        # Simulate historical data
-        dates = pd.date_range(start='2024-01-01', end='2024-12-01', freq='M')
-        scores = [45, 52, 58, 65, 72, 78, 82, 85, 88, 90, 92, overall_score]
-        
-        tracking_df = pd.DataFrame({
-            'Date': dates,
-            'Match Score': scores[:len(dates)]
-        })
-        
-        fig_tracking = px.line(
-            tracking_df,
-            x='Date',
-            y='Match Score',
-            title='Resume Match Score Improvement Over Time',
-            markers=True
-        )
-        fig_tracking.update_layout(
-            yaxis_range=[0, 100],
-            template="plotly_white"
-        )
-        st.plotly_chart(fig_tracking, use_container_width=True)
-        
-        # Export Analytics
-        st.markdown("#### 💾 Export Analytics")
-        
-        export_cols = st.columns(3)
-        
-        with export_cols[0]:
-            # Create comprehensive analytics report
-            analytics_report = {
-                'timestamp': datetime.now().isoformat(),
-                'job_title': job_title,
-                'overall_score': overall_score,
-                'market_position': market_position,
-                'skills_analysis': st.session_state.evaluation.get('requirements_evaluation', {}),
-                'improvement_suggestions': st.session_state.evaluation.get('improvement_suggestions', {}),
-                'competitive_assessment': competitive
-            }
+        with col3:
+            # Generate CSV for further analysis
+            csv_data = pd.DataFrame([
+                {
+                    'Requirement': req.replace('_', ' ').title(),
+                    'Match_Score': result.get('match_score', 0),
+                    'Meets_Requirement': result['meets_requirement'],
+                    'Confidence': result.get('confidence', 'N/A'),
+                    'Explanation': result['explanation']
+                }
+                for req, result in evaluation['requirements_evaluation'].items()
+            ])
             
             if st.download_button(
-                "📊 Download Analytics Report",
-                json.dumps(analytics_report, indent=2),
-                file_name=f"analytics_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json"
+                "📈 Download CSV Data",
+                csv_data.to_csv(index=False),
+                file_name="requirements_analysis.csv",
+                mime="text/csv"
             ):
-                st.success("✅ Analytics downloaded!")
-        
-        with export_cols[1]:
-            # Create skills matrix CSV
-            if 'requirements_evaluation' in st.session_state.evaluation:
-                skills_matrix = []
-                for category, data in st.session_state.evaluation['requirements_evaluation'].items():
-                    if isinstance(data, dict) and 'detailed_requirements' in data:
-                        for req, req_data in data['detailed_requirements'].items():
-                            if isinstance(req_data, dict):
-                                skills_matrix.append({
-                                    'Category': category,
-                                    'Skill': req,
-                                    'Current_Level': safe_get_score(req_data, 'match_score', 0),
-                                    'Target_Level': 85,
-                                    'Gap': 85 - safe_get_score(req_data, 'match_score', 0),
-                                    'Priority': 'High' if safe_get_score(req_data, 'match_score', 0) < 50 else 'Medium'
-                                })
-                
-                if skills_matrix:
-                    skills_df = pd.DataFrame(skills_matrix)
-                    csv_skills = skills_df.to_csv(index=False)
-                    
-                    if st.download_button(
-                        "📈 Download Skills Matrix",
-                        csv_skills,
-                        file_name=f"skills_matrix_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    ):
-                        st.success("✅ Skills matrix downloaded!")
-        
-        with export_cols[2]:
-            if st.button("🔄 Refresh Analytics"):
-                st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.success("✅ Successfully downloaded CSV data!")
 
-# Enhanced footer with developer credit
+# Tab 5: Optimize & Generate (New Tab)
+with tabs[4]:
+    st.header("🔧 Optimize Resume & Generate Cover Letter")
+    
+    if st.session_state.requirements is None or st.session_state.resume_text is None:
+        st.info("📋 Please complete the resume evaluation first before proceeding to optimization.")
+    else:
+        st.markdown("""
+        ### 🎯 Step 5: Generate optimized documents
+        
+        Based on your analysis, generate an optimized resume and personalized cover letter.
+        """)
+        
+        # Options for generation
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            # Generation options
+            st.markdown("### ⚙️ Generation Options")
+            
+            generate_resume = st.checkbox("📄 Generate Optimized Resume", value=True)
+            generate_cover_letter = st.checkbox("✍️ Generate Cover Letter", value=True)
+            
+            # Additional customization
+            st.markdown("### 🎨 Customization Options")
+            
+            focus_areas = st.multiselect(
+                "Focus on specific areas for optimization:",
+                ["Technical Skills", "Experience", "Education", "Certifications", "Soft Skills", "Leadership", "Projects"],
+                default=["Technical Skills", "Experience"]
+            )
+            
+            tone_style = st.selectbox(
+                "Preferred writing tone:",
+                ["Professional", "Confident", "Enthusiastic", "Conservative", "Creative"],
+                index=0
+            )
+            
+            # Company-specific information
+            if st.session_state.company_info:
+                st.markdown("### 🏢 Company Context")
+                st.info(f"Using company information: {st.session_state.company_info[:200]}...")
+            else:
+                st.markdown("### 🏢 Additional Company Context (Optional)")
+                additional_company_info = st.text_area(
+                    "Add any specific company information for better personalization:",
+                    placeholder="e.g., Recent company news, specific projects, company culture details..."
+                )
+                if additional_company_info:
+                    st.session_state.company_info += f"\n{additional_company_info}"
+        
+        with col2:
+            st.markdown("### 💡 What We'll Generate")
+            st.info("""
+            **Optimized Resume:**
+            - Keyword optimization
+            - Better structure
+            - Highlighted relevant experience
+            - ATS-friendly format
+            
+            **Cover Letter:**
+            - Personalized to company
+            - Addresses job requirements
+            - Professional tone
+            - Call to action
+            """)
+            
+            # Show current match score for reference
+            if st.session_state.evaluation:
+                current_score = st.session_state.evaluation.get('overall_match_percentage', 0)
+                st.metric("Current Match Score", f"{current_score}%")
+        
+        # Generate button
+        if st.button("🚀 Generate Optimized Documents", type="primary", use_container_width=True):
+            generated_content = {}
+            
+            if generate_resume:
+                st.markdown("### 📄 Generating Optimized Resume...")
+                optimized_resume = generate_optimized_resume(
+                    st.session_state.requirements, 
+                    st.session_state.resume_text, 
+                    st.session_state.company_info
+                )
+                
+                if optimized_resume:
+                    generated_content['resume'] = optimized_resume
+                    
+                    with st.expander("📄 View Optimized Resume", expanded=True):
+                        st.markdown("#### 📝 Your Optimized Resume")
+                        st.text_area("Optimized Resume Content", optimized_resume, height=400, key="optimized_resume")
+                        
+                        # Download button for resume
+                        st.download_button(
+                            "📥 Download Optimized Resume",
+                            optimized_resume,
+                            file_name="optimized_resume.txt",
+                            mime="text/plain"
+                        )
+                    
+                    st.success("✅ Optimized resume generated successfully!")
+                else:
+                    st.error("❌ Failed to generate optimized resume.")
+            
+            if generate_cover_letter:
+                st.markdown("### ✍️ Generating Cover Letter...")
+                cover_letter = generate_cover_letter(
+                    st.session_state.requirements, 
+                    st.session_state.resume_text, 
+                    st.session_state.company_info
+                )
+                
+                if cover_letter:
+                    generated_content['cover_letter'] = cover_letter
+                    
+                    with st.expander("✍️ View Cover Letter", expanded=True):
+                        st.markdown("#### 📝 Your Personalized Cover Letter")
+                        st.text_area("Cover Letter Content", cover_letter, height=400, key="cover_letter")
+                        
+                        # Download button for cover letter
+                        st.download_button(
+                            "📥 Download Cover Letter",
+                            cover_letter,
+                            file_name="cover_letter.txt",
+                            mime="text/plain"
+                        )
+                    
+                    st.success("✅ Cover letter generated successfully!")
+                else:
+                    st.error("❌ Failed to generate cover letter.")
+            
+            # Generate combined document
+            if generated_content:
+                st.markdown("### 📋 Complete Application Package")
+                
+                # Combine all content
+                combined_content = "COMPLETE APPLICATION PACKAGE\n"
+                combined_content += "=" * 50 + "\n\n"
+                
+                if 'resume' in generated_content:
+                    combined_content += "OPTIMIZED RESUME\n"
+                    combined_content += "-" * 20 + "\n"
+                    combined_content += generated_content['resume'] + "\n\n"
+                
+                if 'cover_letter' in generated_content:
+                    combined_content += "COVER LETTER\n"
+                    combined_content += "-" * 15 + "\n"
+                    combined_content += generated_content['cover_letter'] + "\n\n"
+                
+                # Add analysis summary
+                if st.session_state.evaluation:
+                    combined_content += "ANALYSIS SUMMARY\n"
+                    combined_content += "-" * 18 + "\n"
+                    combined_content += f"Original Match Score: {st.session_state.evaluation.get('overall_match_percentage', 0)}%\n"
+                    combined_content += f"Key Strengths: {', '.join(st.session_state.evaluation.get('strengths', [])[:3])}\n"
+                    combined_content += f"Areas Improved: {', '.join(st.session_state.evaluation.get('gaps', [])[:3])}\n"
+                
+                st.download_button(
+                    "📦 Download Complete Application Package",
+                    combined_content,
+                    file_name="complete_application_package.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+        
+        # Tips for using generated content
+        st.markdown("### 💡 Tips for Using Generated Content")
+        st.markdown("""
+        - **Review and customize**: Always review the generated content and make personal adjustments
+        - **Verify accuracy**: Ensure all information is accurate and truthful
+        - **Company research**: Add specific details about the company you're applying to
+        - **Follow up**: Use the cover letter as a starting point for follow-up communications
+        - **Track applications**: Keep records of which version you sent to which company
+        """)
+        
+        # Additional tools section
+        st.markdown("### 🛠️ Additional Tools")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🔄 Re-evaluate Optimized Resume"):
+                if 'resume' in locals() and optimized_resume:
+                    st.info("Re-evaluating optimized resume against job requirements...")
+                    new_evaluation = evaluate_resume(st.session_state.requirements, optimized_resume)
+                    if new_evaluation:
+                        new_score = new_evaluation.get('overall_match_percentage', 0)
+                        old_score = st.session_state.evaluation.get('overall_match_percentage', 0)
+                        improvement = new_score - old_score
+                        
+                        st.success(f"New match score: {new_score}% (Improvement: +{improvement}%)")
+                    else:
+                        st.error("Failed to re-evaluate optimized resume.")
+                else:
+                    st.warning("Please generate an optimized resume first.")
+        
+        with col2:
+            if st.button("📊 Compare Versions"):
+                if st.session_state.resume_files and len(st.session_state.resume_files) > 1:
+                    st.info("Feature coming soon: Compare multiple resume versions!")
+                else:
+                    st.info("Upload multiple resume versions to compare them.")
+        
+        with col3:
+            if st.button("🎯 Keyword Analysis"):
+                if st.session_state.requirements and st.session_state.resume_text:
+                    st.info("Analyzing keyword density and optimization opportunities...")
+                    # This could be expanded to show keyword analysis
+                    st.success("Keyword analysis completed!")
+
+# Footer
 st.markdown("""
 <div class="footer">
-    <h3>🚀 AI Resume Analyzer Pro</h3>
-    <p style="color: #667eea; font-weight: 600; margin: 10px 0;">
-        Powered by Multiple AI Models • Enhanced Analytics • Smart Optimization
-    </p>
-    <div style="margin: 20px 0;">
-        <div class="developer-credit">
-            Developed with ❤️ by Shreyas Kasture
-        </div>
+    <div style="text-align:center;">
+        <h3>🔍 Enhanced Resume Job Match Checker</h3>
+        <p style="color:#4e54c8; font-weight:600;">Engineered with ❤️ by Shreyas Kasture for Data Enthusiasts</p>
+        <p style="font-size:0.8rem; color:#7f8c8d;">
+            Features: Multi-file Support | Advanced Analytics | Resume Optimization | Cover Letter Generation
+        </p>
     </div>
-    <div style="margin-top: 20px;">
-        <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem;">
-            v2.0 - Enhanced Edition with AI Optimization
-        </span>
-    </div>
-    <p style="color: #718096; font-size: 0.8rem; margin-top: 15px;">
-        Integrating OpenAI GPT-4 • Anthropic Claude • Google Gemini • Market Intelligence APIs
-    </p>
 </div>
 """, unsafe_allow_html=True)
 
