@@ -1871,20 +1871,6 @@ with tabs[4]:
                         st.error(f"Error during re-evaluation: {str(e)}")
                 else:
                     st.warning("Please generate an optimized resume first.")
-        
-        with col2:
-            if st.button("📊 Compare Versions", key="compare_versions_btn"):
-                if st.session_state.resume_files and len(st.session_state.resume_files) > 1:
-                    st.info("Feature coming soon: Compare multiple resume versions!")
-                else:
-                    st.info("Upload multiple resume versions to compare them.")
-        
-        with col3:
-            if st.button("🎯 Keyword Analysis", key="keyword_analysis_btn"):
-                if st.session_state.requirements and st.session_state.resume_text:
-                    st.info("Analyzing keyword density and optimization opportunities...")
-                    # This could be expanded to show keyword analysis
-                    st.success("Keyword analysis completed!")
 
 # Footer
 st.markdown("""
