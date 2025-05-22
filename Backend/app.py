@@ -1222,8 +1222,8 @@ with tabs[4]:
             if generate_cover_letter:
                 st.markdown("### ✍️ Generating Cover Letter...")
                 cover_letter = generate_cover_letter(
-                    st.session_state.requirements, 
-                    st.session_state.resume_text, 
+                    st.session_state.get("requirements", ""),
+                    st.session_state.get("resume_text", ""), 
                     company_info_to_use
                 )
                 
