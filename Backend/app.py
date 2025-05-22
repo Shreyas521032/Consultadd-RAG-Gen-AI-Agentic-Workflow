@@ -1226,20 +1226,20 @@ with tabs[4]:
         st.session_state.get("resume_text", ""),
         company_info_to_use
     )
-            if cover_letter:
-                generated_content['cover_letter'] = cover_letter
-                with st.expander("✍️ View Cover Letter", expanded=True):
-                    st.markdown("#### 📝 Your Personalized Cover Letter")
-                    st.text_area("Cover Letter Content", cover_letter, height=400, key="cover_letter")
-                    st.download_button(
+                if cover_letter:
+                    generated_content['cover_letter'] = cover_letter
+                    with st.expander("✍️ View Cover Letter", expanded=True):
+                        st.markdown("#### 📝 Your Personalized Cover Letter")
+                        st.text_area("Cover Letter Content", cover_letter, height=400, key="cover_letter")
+                        st.download_button(
                 "📥 Download Cover Letter",
                 cover_letter,
                 file_name="cover_letter.txt",
                 mime="text/plain"
             )
-                st.success("✅ Cover letter generated successfully!")
-            else:
-                st.error("❌ Failed to generate cover letter.")
+                    st.success("✅ Cover letter generated successfully!")
+                else:
+                    st.error("❌ Failed to generate cover letter.")
             
             # Generate combined document
             if generated_content:
