@@ -1192,7 +1192,7 @@ with tabs[4]:
         if generate_resume:
             st.markdown("### 📄 Resume Optimization")
             
-            col1, col2 = st.columns([3, 1])
+            col1, col2 = st.columns([1, 3])
             
             with col1:
                 st.markdown("Generate an optimized version of your resume based on the job requirements.")
@@ -1233,7 +1233,7 @@ with tabs[4]:
         if generate_cover_letter_checkbox:
             st.markdown("### ✍️ Cover Letter Generation")
             
-            col1, col2 = st.columns([3, 1])
+            col1, col2 = st.columns([1, 3])
             
             with col1:
                 st.markdown("Generate a personalized cover letter that addresses the job requirements.")
