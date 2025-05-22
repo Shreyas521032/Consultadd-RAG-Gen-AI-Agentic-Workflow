@@ -1109,14 +1109,85 @@ def extract_job_requirements_enhanced(job_desc_text, sensitivity="Balanced"):
         return all_requirements
 
 def evaluate_resume_enhanced(requirements, resume_text, sensitivity="Balanced", analysis_depth="Standard"):
-    """Enhanced resume evaluation"""
+    """Enhanced resume evaluation with better error handling"""
     with st.spinner("🧠 Conducting comprehensive resume analysis..."):
-        prompt = build_enhanced_evaluation_prompt(requirements, resume_text, sensitivity, analysis_depth)
-        result = query_gemini_with_retry(prompt)
+        try:
+            prompt = build_enhanced_evaluation_prompt(requirements, resume_text, sensitivity, analysis_depth)
+            result = query_gemini_with_retry(prompt)
+            
+            if result:
+                json_result = extract_enhanced_json(result)
+                if json_result:
+                    # Validate and clean the result
+                    validated_result = validate_evaluation_result(json_result)
+                    return validated_result
+                else:
+                    st.warning("⚠️ Could not parse AI response. Creating fallback evaluation...")
+                    return create_fallback_evaluation(requirements, resume_text)
+            else:
+                st.warning("⚠️ No response from AI. Creating basic evaluation...")
+                return create_fallback_evaluation(requirements, resume_text)
+                
+        except Exception as e:
+            st.error(f"❌ Error in resume evaluation: {str(e)}")
+            return create_fallback_evaluation(requirements, resume_text)
+
+def validate_evaluation_result(result):
+    """Validate and clean evaluation result"""
+    try:
+        # Ensure required fields exist
+        required_fields = {
+            'overall_match_percentage': 0,
+            'confidence_level': 'medium',
+            'requirements_evaluation': {},
+            'strengths': [],
+            'gaps': [],
+            'red_flags': [],
+            'improvement_suggestions': {'immediate': [], 'medium_term': [], 'long_term': []},
+            'keyword_analysis': {'matched_keywords': [], 'missing_keywords': [], 'keyword_density': 'medium'},
+            'experience_analysis': {'total_years_found': 'Not specified', 'relevant_experience': 'Not specified', 'experience_quality': 'medium', 'progression_evident': False},
+            'ats_compatibility': {'score': 0, 'issues': [], 'recommendations': []},
+            'competitive_assessment': {'market_position': 'average', 'unique_selling_points': [], 'differentiators': []},
+            'summary': 'Analysis completed successfully'
+        }
         
-        if result:
-            return extract_enhanced_json(result)
-        return None
+        # Fill missing fields
+        for field, default_value in required_fields.items():
+            if field not in result:
+                result[field] = default_value
+        
+        # Ensure scores are numeric
+        result['overall_match_percentage'] = safe_get_score(result, 'overall_match_percentage', 0)
+        
+        if 'ats_compatibility' in result and isinstance(result['ats_compatibility'], dict):
+            result['ats_compatibility']['score'] = safe_get_score(result['ats_compatibility'], 'score', 0)
+        
+        # Validate requirements evaluation structure
+        if 'requirements_evaluation' in result and isinstance(result['requirements_evaluation'], dict):
+            for category, data in result['requirements_evaluation'].items():
+                if isinstance(data, dict):
+                    if 'overall_score' not in data:
+                        data['overall_score'] = 0
+                    data['overall_score'] = safe_get_score(data, 'overall_score', 0)
+                    
+                    if 'detailed_requirements' in data and isinstance(data['detailed_requirements'], dict):
+                        for req_name, req_data in data['detailed_requirements'].items():
+                            if isinstance(req_data, dict):
+                                req_data['match_score'] = safe_get_score(req_data, 'match_score', 0)
+                                if 'meets_requirement' not in req_data:
+                                    req_data['meets_requirement'] = False
+                                if 'evidence_found' not in req_data:
+                                    req_data['evidence_found'] = []
+                                if 'explanation' not in req_data:
+                                    req_data['explanation'] = 'No detailed analysis available'
+                                if 'confidence' not in req_data:
+                                    req_data['confidence'] = 'medium'
+        
+        return result
+        
+    except Exception as e:
+        st.warning(f"⚠️ Error validating result: {str(e)}")
+        return result
 
 # Session state initialization
 for key in ['job_desc_text', 'requirements', 'resume_text', 'evaluation', 'current_step', 'optimized_resume', 'cover_letter']:
