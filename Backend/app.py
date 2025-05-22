@@ -338,7 +338,9 @@ def show_progress_indicator(current_step):
     step_html = '<div class="progress-container"><div class="step-indicator">'
     
     for i, (num, title, key) in enumerate(steps):
-        if i < current_step:
+        if current_step not in st.session_state:
+            st.session_state.current_step = 0
+        elif i < current_step:
             circle_class = "step-circle step-completed"
             icon = "✓"
         elif i == current_step:
