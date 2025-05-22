@@ -452,12 +452,23 @@ def create_match_score_gauge(score):
 
 def create_requirements_radar_chart(requirements_evaluation):
     """Create a radar chart for requirements match"""
+    if not requirements_evaluation:
+        # Return empty chart if no data
+        fig = go.Figure()
+        fig.update_layout(title="No Requirements Data Available")
+        return fig
+        
     categories = []
     scores = []
     
     for req, result in requirements_evaluation.items():
         categories.append(req.replace('_', ' ').title())
         scores.append(result.get('match_score', 0))
+    
+    if not categories:  # Additional safety check
+        fig = go.Figure()
+        fig.update_layout(title="No Requirements Data Available")
+        return fig
     
     fig = go.Figure()
     
@@ -484,6 +495,12 @@ def create_requirements_radar_chart(requirements_evaluation):
 
 def create_requirements_bar_chart(requirements_evaluation):
     """Create a horizontal bar chart for requirements"""
+    if not requirements_evaluation:
+        # Return empty chart if no data
+        fig = go.Figure()
+        fig.update_layout(title="No Requirements Data Available")
+        return fig
+        
     reqs = []
     scores = []
     colors = []
@@ -499,6 +516,11 @@ def create_requirements_bar_chart(requirements_evaluation):
             colors.append('#ca8a04')
         else:
             colors.append('#b91c1c')
+    
+    if not reqs:  # Additional safety check
+        fig = go.Figure()
+        fig.update_layout(title="No Requirements Data Available")
+        return fig
     
     fig = go.Figure(go.Bar(
         x=scores,
@@ -541,12 +563,26 @@ def create_skills_gap_analysis(evaluation):
 
 def create_confidence_distribution(requirements_evaluation):
     """Create confidence level distribution chart"""
+    if not requirements_evaluation:
+        # Return empty chart if no data
+        fig = go.Figure()
+        fig.update_layout(title="No Requirements Data Available")
+        return fig
+        
     confidence_counts = {'High': 0, 'Medium': 0, 'Low': 0}
     
     for req, result in requirements_evaluation.items():
-        confidence = result.get('confidence', 'medium').lower()
-        if confidence in ['high', 'medium', 'low']:
-            confidence_counts[confidence.capitalize()] += 1
+        confidence = result.get('confidence', 'medium')
+        if isinstance(confidence, str):
+            confidence = confidence.lower()
+            if confidence in ['high', 'medium', 'low']:
+                confidence_counts[confidence.capitalize()] += 1
+    
+    # Check if we have any data
+    if all(count == 0 for count in confidence_counts.values()):
+        fig = go.Figure()
+        fig.update_layout(title="No Confidence Data Available")
+        return fig
     
     fig = go.Figure(data=[
         go.Pie(labels=list(confidence_counts.keys()), 
@@ -932,16 +968,21 @@ with tabs[3]:
         st.markdown("### 📊 Detailed Requirements Analysis")
         
         requirements_data = []
-        for req, result in evaluation['requirements_evaluation'].items():
+        for req, result in evaluation.get('requirements_evaluation', {}).items():
             match_score = result.get("match_score", 0)
             score_emoji = "✅" if match_score >= 80 else "⚠️" if match_score >= 50 else "❌"
+            
+            # Safe access to all result fields with defaults
+            meets_requirement = result.get("meets_requirement", False)
+            confidence = result.get("confidence", "N/A")
+            explanation = result.get("explanation", "No explanation available")
             
             requirements_data.append({
                 "Requirement": req.replace('_', ' ').title(),
                 "Match": f"{score_emoji} {match_score}%",
-                "Status": "Meets" if result["meets_requirement"] else "Does not meet",
-                "Confidence": result.get("confidence", "N/A").capitalize(),
-                "Details": result["explanation"]
+                "Status": "Meets" if meets_requirement else "Does not meet",
+                "Confidence": confidence.capitalize() if isinstance(confidence, str) else "N/A",
+                "Details": explanation
             })
         
         df = pd.DataFrame(requirements_data)
@@ -949,9 +990,14 @@ with tabs[3]:
         
         # Detailed explanation for each requirement
         st.markdown("### 🔎 Requirement Details")
-        for req, result in evaluation['requirements_evaluation'].items():
-            meets = result["meets_requirement"]
+        requirements_eval = evaluation.get('requirements_evaluation', {})
+        
+        for req, result in requirements_eval.items():
+            # Safe access with defaults
+            meets = result.get("meets_requirement", False)
             match_score = result.get("match_score", 0)
+            confidence = result.get("confidence", "N/A")
+            explanation = result.get("explanation", "No explanation available")
             
             # Determine color based on match score
             if match_score >= 80:
@@ -967,8 +1013,8 @@ with tabs[3]:
             with st.expander(f"{icon} {req.replace('_', ' ').title()} - {match_score}%"):
                 st.markdown(f"**Match Score**: <span style='color:{color};font-weight:bold;'>{match_score}%</span>", unsafe_allow_html=True)
                 st.markdown(f"**Status**: {'Meets requirement ✓' if meets else 'Does not meet requirement ✗'}")
-                st.markdown(f"**Confidence**: {result.get('confidence', 'N/A').capitalize()}")
-                st.markdown(f"**Explanation**: {result['explanation']}")
+                st.markdown(f"**Confidence**: {confidence.capitalize() if isinstance(confidence, str) else 'N/A'}")
+                st.markdown(f"**Explanation**: {explanation}")
         
         # Download results
         col1, col2, col3 = st.columns(3)
@@ -997,7 +1043,7 @@ IMPROVEMENT SUGGESTIONS:
 {chr(10).join([f'• {s}' for s in suggestions])}
 
 REQUIREMENTS ANALYSIS:
-{chr(10).join([f'• {req.replace("_", " ").title()}: {result.get("match_score", 0)}% - {"Meets" if result["meets_requirement"] else "Does not meet"}' for req, result in evaluation['requirements_evaluation'].items()])}
+{chr(10).join([f'• {req.replace("_", " ").title()}: {result.get("match_score", 0)}% - {"Meets" if result.get("meets_requirement", False) else "Does not meet"}' for req, result in evaluation.get('requirements_evaluation', {}).items()])}
             """
             
             if st.download_button(
@@ -1010,15 +1056,16 @@ REQUIREMENTS ANALYSIS:
         
         with col3:
             # Generate CSV for further analysis
+            requirements_eval = evaluation.get('requirements_evaluation', {})
             csv_data = pd.DataFrame([
                 {
                     'Requirement': req.replace('_', ' ').title(),
                     'Match_Score': result.get('match_score', 0),
-                    'Meets_Requirement': result['meets_requirement'],
+                    'Meets_Requirement': result.get('meets_requirement', False),
                     'Confidence': result.get('confidence', 'N/A'),
-                    'Explanation': result['explanation']
+                    'Explanation': result.get('explanation', 'No explanation available')
                 }
-                for req, result in evaluation['requirements_evaluation'].items()
+                for req, result in requirements_eval.items()
             ])
             
             if st.download_button(
