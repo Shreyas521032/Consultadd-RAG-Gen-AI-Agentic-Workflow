@@ -1109,7 +1109,7 @@ REQUIREMENTS ANALYSIS:
             ):
                 st.success("✅ Successfully downloaded CSV data!")
 
-# Tab 5: Optimize & Generate (New Tab)
+# Tab 5: Optimize & Generate (Fixed Tab)
 with tabs[4]:
     st.header("🔧 Optimize Resume & Generate Cover Letter")
     
@@ -1130,7 +1130,7 @@ with tabs[4]:
             st.markdown("### ⚙️ Generation Options")
             
             generate_resume = st.checkbox("📄 Generate Optimized Resume", value=True)
-            generate_cover_letter = st.checkbox("✍️ Generate Cover Letter", value=True)
+            generate_cover_letter_checkbox = st.checkbox("✍️ Generate Cover Letter", value=True)
             
             # Additional customization
             st.markdown("### 🎨 Customization Options")
@@ -1185,95 +1185,125 @@ with tabs[4]:
                 current_score = st.session_state.evaluation.get('overall_match_percentage', 0)
                 st.metric("Current Match Score", f"{current_score}%")
         
-        # Generate button
-        if st.button("🚀 Generate Optimized Documents", type="primary", use_container_width=True):
-            generated_content = {}
+        # Separate sections for each generation type
+        st.markdown("---")
+        
+        # Resume Generation Section
+        if generate_resume:
+            st.markdown("### 📄 Resume Optimization")
             
-            # Ensure company_info is properly initialized
-            company_info_to_use = st.session_state.company_info or ""
+            col1, col2 = st.columns([3, 1])
             
-            if generate_resume:
-                st.markdown("### 📄 Generating Optimized Resume...")
-                optimized_resume = generate_optimized_resume(
-                    st.session_state.requirements, 
-                    st.session_state.resume_text, 
-                    company_info_to_use
-                )
-                
-                if optimized_resume:
-                    generated_content['resume'] = optimized_resume
+            with col1:
+                st.markdown("Generate an optimized version of your resume based on the job requirements.")
+            
+            with col2:
+                if st.button("🚀 Generate Optimized Resume", type="primary", key="generate_resume_btn"):
+                    company_info_to_use = st.session_state.company_info or ""
                     
-                    with st.expander("📄 View Optimized Resume", expanded=True):
-                        st.markdown("#### 📝 Your Optimized Resume")
-                        st.text_area("Optimized Resume Content", optimized_resume, height=400, key="optimized_resume")
+                    optimized_resume = generate_optimized_resume(
+                        st.session_state.requirements, 
+                        st.session_state.resume_text, 
+                        company_info_to_use
+                    )
+                    
+                    if optimized_resume:
+                        st.session_state.optimized_resume = optimized_resume
                         
-                        # Download button for resume
-                        st.download_button(
-                            "📥 Download Optimized Resume",
-                            optimized_resume,
-                            file_name="optimized_resume.txt",
-                            mime="text/plain"
-                        )
+                        with st.expander("📄 View Optimized Resume", expanded=True):
+                            st.markdown("#### 📝 Your Optimized Resume")
+                            st.text_area("Optimized Resume Content", optimized_resume, height=400, key="optimized_resume_display")
+                            
+                            # Download button for resume
+                            st.download_button(
+                                "📥 Download Optimized Resume",
+                                optimized_resume,
+                                file_name="optimized_resume.txt",
+                                mime="text/plain",
+                                key="download_resume"
+                            )
+                        
+                        st.success("✅ Optimized resume generated successfully!")
+                    else:
+                        st.error("❌ Failed to generate optimized resume.")
+        
+        st.markdown("---")
+        
+        # Cover Letter Generation Section  
+        if generate_cover_letter_checkbox:
+            st.markdown("### ✍️ Cover Letter Generation")
+            
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                st.markdown("Generate a personalized cover letter that addresses the job requirements.")
+            
+            with col2:
+                if st.button("🚀 Generate Cover Letter", type="primary", key="generate_cover_letter_btn"):
+                    company_info_to_use = st.session_state.company_info or ""
                     
-                    st.success("✅ Optimized resume generated successfully!")
-                else:
-                    st.error("❌ Failed to generate optimized resume.")
+                    cover_letter = generate_cover_letter(
+                        st.session_state.requirements,
+                        st.session_state.resume_text,
+                        company_info_to_use
+                    )
+                    
+                    if cover_letter:
+                        st.session_state.cover_letter = cover_letter
+                        
+                        with st.expander("✍️ View Cover Letter", expanded=True):
+                            st.markdown("#### 📝 Your Personalized Cover Letter")
+                            st.text_area("Cover Letter Content", cover_letter, height=400, key="cover_letter_display")
+                            
+                            # Download button for cover letter
+                            st.download_button(
+                                "📥 Download Cover Letter",
+                                cover_letter,
+                                file_name="cover_letter.txt",
+                                mime="text/plain",
+                                key="download_cover_letter"
+                            )
+                        
+                        st.success("✅ Cover letter generated successfully!")
+                    else:
+                        st.error("❌ Failed to generate cover letter.")
+        
+        st.markdown("---")
+        
+        # Complete Package Download Section
+        if st.session_state.get('optimized_resume') or st.session_state.get('cover_letter'):
+            st.markdown("### 📋 Complete Application Package")
             
-            st.markdown("### ✍️ Generate Cover Letter")
-            if st.button("🚀 Generate Cover Letter"):
-                cover_letter = generate_cover_letter(
-        st.session_state.get("requirements", ""),
-        st.session_state.get("resume_text", ""),
-        company_info_to_use
-    )
-                if cover_letter:
-                    generated_content['cover_letter'] = cover_letter
-                    with st.expander("✍️ View Cover Letter", expanded=True):
-                        st.markdown("#### 📝 Your Personalized Cover Letter")
-                        st.text_area("Cover Letter Content", cover_letter, height=400, key="cover_letter")
-                        st.download_button(
-                "📥 Download Cover Letter",
-                cover_letter,
-                file_name="cover_letter.txt",
-                mime="text/plain"
+            # Combine all content
+            combined_content = "COMPLETE APPLICATION PACKAGE\n"
+            combined_content += "=" * 50 + "\n\n"
+            
+            if st.session_state.get('optimized_resume'):
+                combined_content += "OPTIMIZED RESUME\n"
+                combined_content += "-" * 20 + "\n"
+                combined_content += st.session_state.optimized_resume + "\n\n"
+            
+            if st.session_state.get('cover_letter'):
+                combined_content += "COVER LETTER\n"
+                combined_content += "-" * 15 + "\n"
+                combined_content += st.session_state.cover_letter + "\n\n"
+            
+            # Add analysis summary
+            if st.session_state.evaluation:
+                combined_content += "ANALYSIS SUMMARY\n"
+                combined_content += "-" * 18 + "\n"
+                combined_content += f"Original Match Score: {st.session_state.evaluation.get('overall_match_percentage', 0)}%\n"
+                combined_content += f"Key Strengths: {', '.join(st.session_state.evaluation.get('strengths', [])[:3])}\n"
+                combined_content += f"Areas Improved: {', '.join(st.session_state.evaluation.get('gaps', [])[:3])}\n"
+            
+            st.download_button(
+                "📦 Download Complete Application Package",
+                combined_content,
+                file_name="complete_application_package.txt",
+                mime="text/plain",
+                use_container_width=True,
+                key="download_complete_package"
             )
-                    st.success("✅ Cover letter generated successfully!")
-                else:
-                    st.error("❌ Failed to generate cover letter.")
-            
-            # Generate combined document
-            if generated_content:
-                st.markdown("### 📋 Complete Application Package")
-                
-                # Combine all content
-                combined_content = "COMPLETE APPLICATION PACKAGE\n"
-                combined_content += "=" * 50 + "\n\n"
-                
-                if 'resume' in generated_content:
-                    combined_content += "OPTIMIZED RESUME\n"
-                    combined_content += "-" * 20 + "\n"
-                    combined_content += generated_content['resume'] + "\n\n"
-                
-                if 'cover_letter' in generated_content:
-                    combined_content += "COVER LETTER\n"
-                    combined_content += "-" * 15 + "\n"
-                    combined_content += generated_content['cover_letter'] + "\n\n"
-                
-                # Add analysis summary
-                if st.session_state.evaluation:
-                    combined_content += "ANALYSIS SUMMARY\n"
-                    combined_content += "-" * 18 + "\n"
-                    combined_content += f"Original Match Score: {st.session_state.evaluation.get('overall_match_percentage', 0)}%\n"
-                    combined_content += f"Key Strengths: {', '.join(st.session_state.evaluation.get('strengths', [])[:3])}\n"
-                    combined_content += f"Areas Improved: {', '.join(st.session_state.evaluation.get('gaps', [])[:3])}\n"
-                
-                st.download_button(
-                    "📦 Download Complete Application Package",
-                    combined_content,
-                    file_name="complete_application_package.txt",
-                    mime="text/plain",
-                    use_container_width=True
-                )
         
         # Tips for using generated content
         st.markdown("### 💡 Tips for Using Generated Content")
@@ -1291,11 +1321,11 @@ with tabs[4]:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("🔄 Re-evaluate Optimized Resume"):
-                if 'optimized_resume' in locals() and optimized_resume:
+            if st.button("🔄 Re-evaluate Optimized Resume", key="re_evaluate_btn"):
+                if st.session_state.get('optimized_resume'):
                     st.info("Re-evaluating optimized resume against job requirements...")
                     try:
-                        new_evaluation = evaluate_resume(st.session_state.requirements, optimized_resume)
+                        new_evaluation = evaluate_resume(st.session_state.requirements, st.session_state.optimized_resume)
                         if new_evaluation:
                             new_score = new_evaluation.get('overall_match_percentage', 0)
                             old_score = st.session_state.evaluation.get('overall_match_percentage', 0)
@@ -1310,14 +1340,14 @@ with tabs[4]:
                     st.warning("Please generate an optimized resume first.")
         
         with col2:
-            if st.button("📊 Compare Versions"):
+            if st.button("📊 Compare Versions", key="compare_versions_btn"):
                 if st.session_state.resume_files and len(st.session_state.resume_files) > 1:
                     st.info("Feature coming soon: Compare multiple resume versions!")
                 else:
                     st.info("Upload multiple resume versions to compare them.")
         
         with col3:
-            if st.button("🎯 Keyword Analysis"):
+            if st.button("🎯 Keyword Analysis", key="keyword_analysis_btn"):
                 if st.session_state.requirements and st.session_state.resume_text:
                     st.info("Analyzing keyword density and optimization opportunities...")
                     # This could be expanded to show keyword analysis
