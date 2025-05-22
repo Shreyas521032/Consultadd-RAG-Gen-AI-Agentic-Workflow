@@ -1064,7 +1064,26 @@ def query_gemini_with_retry(prompt, max_retries=3):
     return None
 
 def extract_enhanced_json(text):
-    return json.loads(text)
+    try:
+        # Try direct parsing first
+        return json.loads(text)
+    except json.JSONDecodeError:
+        try:
+            # Clean the text and try again
+            cleaned_text = re.sub(r'^```json\s*|```\s*', '', text.strip())
+            return json.loads(cleaned_text)
+        except json.JSONDecodeError:
+            try:
+                # Try to find JSON within the text
+                json_match = re.search(r'(\{.*\})', text, re.DOTALL)
+                if json_match:
+                    return json.loads(json_match.group(1))
+                else:
+                    st.error("❌ Could not extract valid JSON from response")
+                    return None
+            except Exception as e:
+                st.error(f"❌ JSON parsing failed: {str(e)}")
+                return None
 
 # Enhanced main functions
 def extract_job_requirements_enhanced(job_desc_text, sensitivity="Balanced"):
