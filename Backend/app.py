@@ -1071,11 +1071,7 @@ def query_gemini_with_retry(prompt, max_retries=3):
     return None
 
 def extract_enhanced_json(text):
-    """Enhanced JSON extraction with better error handling"""
-    try:
-        # Try direct parsing first
-        return json.loads(text)
-    except json.JSONDecodeError:
+    return json.loads(text)
 
 # Enhanced main functions
 def extract_job_requirements_enhanced(job_desc_text, sensitivity="Balanced"):
