@@ -660,17 +660,49 @@ Respond with only the summary text, no additional formatting or explanation.
 
 def generate_optimized_resume(requirements, current_resume, company_info=""):
     """Generate an optimized resume"""
+    # Ensure all inputs are strings and not None
+    if not requirements:
+        st.error("❌ No requirements available for optimization.")
+        return None
+    
+    if not current_resume:
+        st.error("❌ No resume content available for optimization.")
+        return None
+    
+    # Ensure company_info is a string
+    company_info = company_info or ""
+    
     with st.spinner("🔧 Generating optimized resume..."):
-        prompt = build_resume_optimization_prompt(requirements, current_resume, company_info)
-        result = query_gemini(prompt)
-        return result
+        try:
+            prompt = build_resume_optimization_prompt(requirements, current_resume, company_info)
+            result = query_gemini(prompt)
+            return result
+        except Exception as e:
+            st.error(f"❌ Error generating optimized resume: {str(e)}")
+            return None
 
 def generate_cover_letter(requirements, resume_text, company_info=""):
     """Generate a cover letter"""
+    # Ensure all inputs are strings and not None
+    if not requirements:
+        st.error("❌ No requirements available for cover letter generation.")
+        return None
+    
+    if not resume_text:
+        st.error("❌ No resume content available for cover letter generation.")
+        return None
+    
+    # Ensure company_info is a string
+    company_info = company_info or ""
+    
     with st.spinner("✍️ Generating cover letter..."):
-        prompt = build_cover_letter_prompt(requirements, resume_text, company_info)
-        result = query_gemini(prompt)
-        return result
+        try:
+            prompt = build_cover_letter_prompt(requirements, resume_text, company_info)
+            result = query_gemini(prompt)
+            return result
+        except Exception as e:
+            st.error(f"❌ Error generating cover letter: {str(e)}")
+            return None
 
 # App Interface
 tabs = st.tabs(["📤 Upload Documents", "📋 Extract Requirements", "📝 Upload Resume", "📊 Results", "🔧 Optimize & Generate"])
@@ -716,10 +748,11 @@ with tabs[0]:
         company_info = st.text_area(
             "Enter company information, culture, values, or any additional context",
             height=150,
-            placeholder="e.g., Company mission, values, culture, recent news, or any specific information about the organization..."
+            placeholder="e.g., Company mission, values, culture, recent news, or any specific information about the organization...",
+            value=st.session_state.company_info
         )
         
-        if company_info:
+        if company_info and company_info != st.session_state.company_info:
             st.session_state.company_info = company_info
     
     with col2:
@@ -1115,17 +1148,21 @@ with tabs[4]:
             )
             
             # Company-specific information
-            if st.session_state.company_info:
+            if st.session_state.company_info and st.session_state.company_info.strip():
                 st.markdown("### 🏢 Company Context")
                 st.info(f"Using company information: {st.session_state.company_info[:200]}...")
             else:
                 st.markdown("### 🏢 Additional Company Context (Optional)")
                 additional_company_info = st.text_area(
                     "Add any specific company information for better personalization:",
-                    placeholder="e.g., Recent company news, specific projects, company culture details..."
+                    placeholder="e.g., Recent company news, specific projects, company culture details...",
+                    key="additional_company_info"
                 )
-                if additional_company_info:
-                    st.session_state.company_info += f"\n{additional_company_info}"
+                if additional_company_info and additional_company_info.strip():
+                    if st.session_state.company_info:
+                        st.session_state.company_info += f"\n{additional_company_info}"
+                    else:
+                        st.session_state.company_info = additional_company_info
         
         with col2:
             st.markdown("### 💡 What We'll Generate")
@@ -1152,12 +1189,15 @@ with tabs[4]:
         if st.button("🚀 Generate Optimized Documents", type="primary", use_container_width=True):
             generated_content = {}
             
+            # Ensure company_info is properly initialized
+            company_info_to_use = st.session_state.company_info or ""
+            
             if generate_resume:
                 st.markdown("### 📄 Generating Optimized Resume...")
                 optimized_resume = generate_optimized_resume(
                     st.session_state.requirements, 
                     st.session_state.resume_text, 
-                    st.session_state.company_info
+                    company_info_to_use
                 )
                 
                 if optimized_resume:
@@ -1184,7 +1224,7 @@ with tabs[4]:
                 cover_letter = generate_cover_letter(
                     st.session_state.requirements, 
                     st.session_state.resume_text, 
-                    st.session_state.company_info
+                    company_info_to_use
                 )
                 
                 if cover_letter:
@@ -1257,17 +1297,20 @@ with tabs[4]:
         
         with col1:
             if st.button("🔄 Re-evaluate Optimized Resume"):
-                if 'resume' in locals() and optimized_resume:
+                if 'optimized_resume' in locals() and optimized_resume:
                     st.info("Re-evaluating optimized resume against job requirements...")
-                    new_evaluation = evaluate_resume(st.session_state.requirements, optimized_resume)
-                    if new_evaluation:
-                        new_score = new_evaluation.get('overall_match_percentage', 0)
-                        old_score = st.session_state.evaluation.get('overall_match_percentage', 0)
-                        improvement = new_score - old_score
-                        
-                        st.success(f"New match score: {new_score}% (Improvement: +{improvement}%)")
-                    else:
-                        st.error("Failed to re-evaluate optimized resume.")
+                    try:
+                        new_evaluation = evaluate_resume(st.session_state.requirements, optimized_resume)
+                        if new_evaluation:
+                            new_score = new_evaluation.get('overall_match_percentage', 0)
+                            old_score = st.session_state.evaluation.get('overall_match_percentage', 0)
+                            improvement = new_score - old_score
+                            
+                            st.success(f"New match score: {new_score}% (Improvement: +{improvement}%)")
+                        else:
+                            st.error("Failed to re-evaluate optimized resume.")
+                    except Exception as e:
+                        st.error(f"Error during re-evaluation: {str(e)}")
                 else:
                     st.warning("Please generate an optimized resume first.")
         
