@@ -6,4 +6,4 @@ python-dotenv
 requests
 numpy
 plotly
-docx
+python-docx
