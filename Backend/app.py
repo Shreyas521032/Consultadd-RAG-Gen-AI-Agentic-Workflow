@@ -380,13 +380,6 @@ def show_progress_indicator(current_step):
         else:
             circle_class = "step-circle step-inactive"
             icon = num
-        
-        step_html += f'''
-        <div class="step">
-            <div class="{circle_class}">{icon}</div>
-            <span style="font-size: 0.8rem; color: #4a5568; font-weight: 600;">{title}</span>
-        </div>
-        '''
               
         if i < len(steps) - 1:
             line_color = "#667eea" if i < current_step else "#e2e8f0"
